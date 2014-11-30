@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{96C0BC68-A3C0-455A-B934-023E6062DA32}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>GS</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>.\lib\$(Configuration)\</OutDir>
+    <IncludePath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;$(IncludePath)</IncludePath>
+    <OutDir>.\lib\$(Configuration)\</OutDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\work\geomary3D\GS\inc;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\Program Files\CGAL-4.4\include;$(BOOST_INCLUDEDIR);C:\Program Files %28x86%29\tbb42\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\work\geomary3D\GS\inc;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\Program Files\CGAL-4.4\include;$(BOOST_INCLUDEDIR);C:\Program Files %28x86%29\tbb42\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <Text Include="..\Geomary3D\ReadMe.txt" />
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="inc\arithmetic.h" />
+    <ClInclude Include="inc\AutoPtr.h" />
+    <ClInclude Include="inc\BaseMesh.h" />
+    <ClInclude Include="inc\BoolOp.h" />
+    <ClInclude Include="inc\Box2.h" />
+    <ClInclude Include="inc\Box3.h" />
+    <ClInclude Include="inc\BSPBoolOp.h" />
+    <ClInclude Include="inc\BSPOctTree.h" />
+    <ClInclude Include="inc\BSPTree.h" />
+    <ClInclude Include="inc\Camera.h" />
+    <ClInclude Include="inc\configure.h" />
+    <ClInclude Include="inc\CSGExprNode.h" />
+    <ClInclude Include="inc\CSGMesh.h" />
+    <ClInclude Include="inc\CSGTree.h" />
+    <ClInclude Include="inc\D3D11Buffer.h" />
+    <ClInclude Include="inc\FixedBSPTree.h" />
+    <ClInclude Include="inc\FixedPlane.h" />
+    <ClInclude Include="inc\FixedPlaneMesh.h" />
+    <ClInclude Include="inc\FixedPolygon.h" />
+    <ClInclude Include="inc\adaptive.h" />
+    <ClInclude Include="inc\Font.h" />
+    <ClInclude Include="inc\FontShader.h" />
+    <ClInclude Include="inc\Geometry.h" />
+    <ClInclude Include="inc\Global.h" />
+    <ClInclude Include="inc\hashlookup.h" />
+    <ClInclude Include="inc\Light.h" />
+    <ClInclude Include="inc\LineSegment.h" />
+    <ClInclude Include="inc\LineSet.h" />
+    <ClInclude Include="inc\mat2.h" />
+    <ClInclude Include="inc\mat3.h" />
+    <ClInclude Include="inc\mat4.h" />
+    <ClInclude Include="inc\MeshBoolOp.h" />
+    <ClInclude Include="inc\OctTree.h" />
+    <ClInclude Include="inc\Plane.h" />
+    <ClInclude Include="inc\PlaneMesh.h" />
+    <ClInclude Include="inc\Polygon.h" />
+    <ClInclude Include="inc\quaternion.h" />
+    <ClInclude Include="inc\Shader.h" />
+    <ClInclude Include="inc\Surface.h" />
+    <ClInclude Include="inc\Texture.h" />
+    <ClInclude Include="inc\topology.h" />
+    <ClInclude Include="inc\transform.h" />
+    <ClInclude Include="inc\typedefs.h" />
+    <ClInclude Include="inc\vec.h" />
+    <ClInclude Include="inc\vec2.h" />
+    <ClInclude Include="inc\vec3.h" />
+    <ClInclude Include="inc\vec4.h" />
+    <ClInclude Include="inc\VirtualDeviceDx11.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\adaptive.cpp" />
+    <ClCompile Include="src\BaseMesh.cpp" />
+    <ClCompile Include="src\BoolOp.cpp" />
+    <ClCompile Include="src\BSPBoolOp.cpp" />
+    <ClCompile Include="src\BSPOctTree.cpp" />
+    <ClCompile Include="src\BSPTree.cpp" />
+    <ClCompile Include="src\Camera.cpp" />
+    <ClCompile Include="src\CSGMesh.cpp" />
+    <ClCompile Include="SRC\CSGTree.cpp" />
+    <ClCompile Include="src\D3D11Buffer.cpp" />
+    <ClCompile Include="src\FixedBSPTree.cpp" />
+    <ClCompile Include="src\FixedPlane.cpp" />
+    <ClCompile Include="src\FixedPlaneMesh.cpp" />
+    <ClCompile Include="src\FixedPolygon.cpp" />
+    <ClCompile Include="src\Font.cpp" />
+    <ClCompile Include="src\FontShader.cpp" />
+    <ClCompile Include="src\Global.cpp" />
+    <ClCompile Include="src\Light.cpp" />
+    <ClCompile Include="src\LineSet.cpp" />
+    <ClCompile Include="src\MeshBoolOp.cpp" />
+    <ClCompile Include="src\OctTree.cpp" />
+    <ClCompile Include="src\Plane.cpp" />
+    <ClCompile Include="src\PlaneMesh.cpp" />
+    <ClCompile Include="src\Polygon.cpp" />
+    <ClCompile Include="src\Shader.cpp" />
+    <ClCompile Include="src\Surface.cpp" />
+    <ClCompile Include="src\VirtualDeviceDx11.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="inc\Intersect.inl" />
+    <None Include="Shaders\font.ps" />
+    <None Include="Shaders\font.vs" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
