@@ -258,7 +258,7 @@ void CSGOpNode::Solve()
             RightRelationTest rrs(this, i);
             //tbb::parallel_reduce(tbb::blocked_range<int>(0,info.Size(), 640), rrs);
             tbb::parallel_reduce(tbb::blocked_range<int>(0,info.Size()), rrs, tbb::auto_partitioner());
-            if (rrs.mNewInfo.Size())
+             if (rrs.mNewInfo.Size())
                 mInfoList.push_back(rrs.mNewInfo);
 
         }
@@ -509,7 +509,7 @@ void CSGTree::Evaluate1()
 	CSGRecMeshPair testPair;
 	std::map<CSGRecMeshPair, bool> InterCarveDict;
  
-	RecMeshDict AllMesh;
+	RecMeshDict AllMesh;// dictionary from recmesh to bool
     mpTree = new OctTree();  
 	BuildTrees();
     tbb::tick_count t0 = tbb::tick_count::now(); 
@@ -583,7 +583,7 @@ void CSGTree::Evaluate1()
      
     delete mpTree;
     mpTree= nullptr;
-       tbb::tick_count t1 = tbb::tick_count::now();
+    tbb::tick_count t1 = tbb::tick_count::now();
      WCHAR buffer [100];
     ::swprintf_s(buffer, 100, L"Time %f Sec", (t1-t0).seconds());
     ::MessageBox(NULL, buffer, L"Warning", MB_OK); 

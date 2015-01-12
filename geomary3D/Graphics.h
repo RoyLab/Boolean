@@ -42,6 +42,9 @@ public :
     void ZoomView(short zDelta);
     void StartOrbitView(int x, int y);
     void UpdateOrbitView(int x, int y); 
+
+	void setExpression(char* str){mExpression = str;}
+
 private : 
     void ComputeLightDirection(const GS::DirectionLight& light, const GS::float4x4& worldMat, GS::float3& Lightdir);
     bool Render();  
@@ -56,7 +59,8 @@ private :
     GS::int2               mViewPortSize;
     GS::int2               mCursorPos;
     GS::float3             mCenterPos;
-
+	
+	std::string				mExpression;
 };
 
 #endif 

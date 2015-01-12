@@ -13,6 +13,7 @@ CGraphics::CGraphics()
 	, mCursorPos(0, 0)
 {
 	m_pD3D =0;
+	mExpression="0+1-2";
 }
 
 CGraphics::~CGraphics()
@@ -178,7 +179,7 @@ void CGraphics::Intersect()
      //}
 
      //mModelMgr.EvaluateBoolExpression(s);
-     mModelMgr.EvaluateBoolExpression("0+(1*2)+(3*4)");
+     mModelMgr.EvaluateBoolExpression(mExpression.c_str());
  }
 
 

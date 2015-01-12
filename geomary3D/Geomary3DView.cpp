@@ -94,6 +94,7 @@ BOOL CGeomary3DView::PreCreateWindow(CREATESTRUCT& cs)
 void CGeomary3DView::OnInitialUpdate()
 {
 	CView::OnInitialUpdate();
+    //AllocConsole();
 	/*RECT rc;
 	GetClientRect(&rc);
 	LONG lw = rc.right - rc.left;
@@ -186,6 +187,7 @@ void CGeomary3DView::PostNcDestroy()
 {
 	// TODO: Add your specialized code here and/or call the base class
 	mpGraphic->Shutdown();
+	//FreeConsole();
 	CView::PostNcDestroy();
 }
 

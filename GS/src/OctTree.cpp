@@ -516,7 +516,7 @@ void OctTree::CarveCriticalCelles(std::vector<CSGMesh*>& csgmeshes)
   
             }
         }
-        if (surfaceMap.size() >= 2)
+        if (surfaceMap.size() >= 2) // if more than two mesh intersect here, clip
         {
             std::vector<int> meshIdList(surfaceMap.size());
             std::map<int, std::vector<int> >::iterator it = surfaceMap.begin();

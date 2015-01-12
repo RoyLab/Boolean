@@ -36,13 +36,13 @@
 #define IDS_EDIT_MENU                   306
 #define IDR_RIBBON                      307
 #define IDB_BOOLLARGE                   311
-#define IDB_BITMAP1                     313
 #define IDB_VIEWLARGE                   313
 #define ID_WRITE_PASTEASHYPERLINK       32770
 #define ID_BOOL_UNION                   32773
 #define ID_BOOL_INTERSECT               32774
 #define ID_BOOL_DIFFERENCE              32775
 #define ID_BUTTON7                      32776
+#define ID_BUTTON_EXPR_BSP_LOCAL        32776
 #define ID_BUTTON12                     32782
 #define ID_BUTTON13                     32783
 #define ID_VISUALSTYLE                  32784
@@ -55,13 +55,14 @@
 #define ID__LOCALIZED_BSP_DIFFERENCE    32792
 #define ID_LOCALIZED_BSP_DIFFERENCE     32792
 #define ID_BUTTON2                      32793
+#define ID_BUTTON3                      32794
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        314
-#define _APS_NEXT_COMMAND_VALUE         32794
+#define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif
