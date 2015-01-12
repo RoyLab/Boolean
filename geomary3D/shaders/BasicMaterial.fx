@@ -86,7 +86,7 @@ PixelInputType VS(VertexInputType input)
 ////////////////////////////////////////////////////////////////////////////////
 float4 PS(PixelInputType input) : SV_TARGET
 {
-	//return float4(1, 1, 1, 1);
+	////return float4(1, 1, 1, 1);
     float4 color = ambientColor;
 	//if (lightActive[0])
 	{

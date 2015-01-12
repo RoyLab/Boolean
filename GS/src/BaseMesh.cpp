@@ -16,11 +16,8 @@ namespace GS{
 
 static inline double3 normalize(double3 &v, float3 &center, float3 &scale)
 {
-	return (v-center)/scale*2.0;
-}
 
-static inline double3 normalize(const float3 &v, float3 &center, float3 &scale)
-{
+
 	return (v-center)/scale*2.0;
 }
 
@@ -504,6 +501,8 @@ int BaseMeshImp::GetVertexStride() const
 	return sizeof(float3)+ sizeof(float4)+sizeof(float3);
 	
 }
+
+ std::hash_map<int, bool> BaseMesh::mMeshIDSet;
 void BaseMesh::GenID()
 {
 	static bool bFirstTime = false;
@@ -512,7 +511,16 @@ void BaseMesh::GenID()
 		srand( (unsigned)time( NULL ) );
 		bFirstTime = true;
 	}
-	mpMeshImp->mID =   rand()+1;
+    for(;;)
+    {
+        int id = rand()+1;
+        if (mMeshIDSet.find(id )!= mMeshIDSet.end())
+            continue;
+
+	    mpMeshImp->mID =  id;
+        mMeshIDSet[id] = true;
+        break;
+    }
 }
 
 
@@ -760,10 +768,9 @@ void BaseMeshImp::NormalizeCoord(const Box3* bbox)
     if (bbox) m_TransformBBox = *bbox;
     else m_TransformBBox = mAABB;
 
+    mAABB.Set(-1.0, -1.0, -1.0, 1.0, 1.0, 1.0);
 	auto center = m_TransformBBox.Center();
 	auto scale = m_TransformBBox.Diagonal();
-    mAABB.Set(normalize(mAABB.Min(), center, scale), 
-        normalize(mAABB.Max(), center, scale));
 
 	for (auto &v: mVertex)
 		v = normalize(v, center, scale);

@@ -5,6 +5,7 @@
 #include "Global.h"
 #include "BoolOp.h"
 #include <vld.h>
+#include <iostream>
 
 
 CGraphics::CGraphics()
@@ -161,7 +162,23 @@ void CGraphics::Intersect()
 
  void CGraphics::EvaluateBoolExpression()
  {
-     mModelMgr.EvaluateBoolExpression("(0+1)+2");
+     bool flag = false;
+     //std::string s ="";
+     //char c[20];
+     //const int end = 5;
+     //for (int i = 0 ; i < end; i++)
+     //{
+     //    
+     //    sprintf_s(c, 20, "%d", i);
+     //    s+=c;
+     //    if (i <end-1)
+     //        if (flag) s+="+";
+     //        else s+="-";
+     //   flag = !flag;
+     //}
+
+     //mModelMgr.EvaluateBoolExpression(s);
+     mModelMgr.EvaluateBoolExpression("0+(1*2)+(3*4)");
  }
 
 

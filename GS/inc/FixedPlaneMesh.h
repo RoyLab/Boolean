@@ -14,7 +14,7 @@ class BaseMesh;
 class FixedPlaneMesh {
    
 public:
-    FixedPlaneMesh(): mColor(1.0f, 0.0f, 0.0f, 1.0f){}
+    FixedPlaneMesh(): mColor(1.0f, 1.0f, 1.0f, 1.0f){}
     FixedPlaneMesh(const Box3& bbox, const float4 &color);
     FixedPlaneMesh(FixedBSPTree* pTree, const float4 &color);
 	void AddPolygon(const Polygon& poly);

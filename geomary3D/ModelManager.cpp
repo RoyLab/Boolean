@@ -76,6 +76,10 @@ void CModelManager::CreateOctree()
         mpResultMeshList.push_back(pLineSet);
     delete pTree;
 
+    
+
+
+
 }
 
 

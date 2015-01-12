@@ -13,7 +13,7 @@
 
 namespace GS{
 
-class MeshData;
+
 enum OctNodeType{
     eUnkown = 0x0,
     eNormal   = 0x1, 
@@ -32,7 +32,6 @@ struct  PolygonObj{
     AutoPtr<SharedData > mpSharedData;
     BaseMesh* mpMesh;
     int     mTriId;
-    MeshData* pMeshData; // roy
 public : 
     PolygonObj()
         :mpMesh(nullptr)
@@ -189,7 +188,7 @@ protected:
     int FindFirstNode(double tx0, double ty0, double tz0, double txm, double tym, double tzm); 
     int GetNextNode(double txm, int x, double tym, int y, double tzm, int z);
     void ProcessSubNode ( double tx0, double ty0, double tz0, double tx1, double ty1, double tz1, OctTreeNode* pNode, int& a, RayCastingTest& func );
-protected: 
+private: 
     OctTreeNode* mpRoot;
     std::map<int, int> mMeshOrder;
     bool mbCarved ; 

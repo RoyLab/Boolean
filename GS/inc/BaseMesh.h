@@ -187,7 +187,7 @@ protected:
       // virtual void                FillD3DBuffer(ID3D11DeviceContext* dc,D3D11Buffer* mpVB, int VBOffset, 
      //                                           D3D11Buffer* mpIB, int IBOffet);
         static   int                GenMeshID();
-
+        static   std::hash_map<int, bool> mMeshIDSet;
 
 protected :
         BaseMeshImp*   mpMeshImp;

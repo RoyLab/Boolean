@@ -9,6 +9,10 @@
 #include "CSGMesh.h"
 #include "topology.h"
 #include "tbb\tick_count.h"
+#include "Fade_2D.h"
+
+
+
 namespace GS{
 
 
@@ -869,65 +873,109 @@ void  Surface<Precision>::CheckTriangle(std::vector<vec2<Precision> > & TriArray
 
 }
 
+
 template <typename Precision>
 void Surface<Precision>::ConstrainTriangulate(std::vector<vec2<Precision> >& TriArray)
 {
-	typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-
-	typedef CGAL::Triangulation_vertex_base_2<K>                     Vb;
-	typedef CGAL::Constrained_triangulation_face_base_2<K>           Fb;
-	typedef CGAL::Triangulation_data_structure_2<Vb,Fb>              TDS;
-	//typedef CGAL::Exact_predicates_tag                               Itag;
-	typedef CGAL::Constrained_Delaunay_triangulation_2<K, TDS, CGAL::No_intersection_tag> CDT;
- 
-	std::map<vec2<Precision>, CDT::Vertex_handle, Vec2LessThan<Precision>> vertexMap;
-	CDT cdt;
-	CDT::Vertex_handle vh1, vh2; 
+	GEOM_FADE2D::Fade_2D dt;
+    std::vector<GEOM_FADE2D::Segment2 > vSegments;
 	for(int i = 0; i<mSeg.size(); i++ )
 	{
 		vec2<Precision> v0 = mVertex[mSeg[i].VId[0]].Pos;
 		vec2<Precision> v1 = mVertex[mSeg[i].VId[1]].Pos;
-		CDT::Point p0(v0.x, v0.y);
-		CDT::Point p1(v1.x, v1.y);
-       /* if (vertexMap.find(v0) != vertexMap.end())
-			    vh1 = vertexMap[v0];
-		   else */
-		   {
-			   vh1 = cdt.insert(p0);
-			   vertexMap[v0] = vh1;
-		   }
-		  /* if (vertexMap.find(v1) != vertexMap.end())
-			    vh2 = vertexMap[v1];
-		   else */
-		   {
-			    vh2 = cdt.insert(p1);
-				 vertexMap[v1] = vh2;
-		   }
-		   cdt.insert_constraint(vh1, vh2);
-	}
-	int count = cdt.number_of_faces() ; 
-	TriArray.reserve(count*3);
-    for (CDT::Finite_faces_iterator fit = cdt.finite_faces_begin();
-       fit != cdt.finite_faces_end(); ++fit)
-   {
-	   vec2<Precision> v0(fit->vertex(2)->point().x(),fit->vertex(2)->point().y() );
-	   vec2<Precision> v1(fit->vertex(1)->point().x(),fit->vertex(1)->point().y() );
-	   vec2<Precision> v2(fit->vertex(0)->point().x(),fit->vertex(0)->point().y() );   
-	   if (IsEqual(cross(v0- v2, v1-v2), Precision(0.), (Precision)EPSF ))
+      
+		GEOM_FADE2D::Point2 p0(v0.x , v0.y);
+		GEOM_FADE2D::Point2 p1(v1.x, v1.y);
+        GEOM_FADE2D::Segment2 seg(p0,p1);
+		vSegments.push_back(seg);
+    }
+    // Use the segments to create a constraint object. The insertion strategy
+	// can be CIS_KEEP_DELAUNAY or CIS_IGNORE_DELAUNAY. The difference is that
+	// in the former case the Delaunay triangulation will be kept (by inserting
+	// additional points if necessary). Use one of the following two lines. 	
+	GEOM_FADE2D::ConstraintGraph2* pConstraint=dt.createConstraint(vSegments, GEOM_FADE2D::CIS_IGNORE_DELAUNAY);
+	//ConstraintGraph2* pConstraint=dt.createConstraint(vSegments,CIS_IGNORE_DELAUNAY);
+    dt.applyConstraintsAndZones();
+    // Retrieve the triangles of the triangulation. Draw them in black
+	std::vector<GEOM_FADE2D::Triangle2*> vAllDelaunayTriangles;
+	dt.getTrianglePointers(vAllDelaunayTriangles);
+	for(std::vector<GEOM_FADE2D::Triangle2*>::iterator it=vAllDelaunayTriangles.begin();it!=vAllDelaunayTriangles.end();++it)
+	{
+		GEOM_FADE2D::Triangle2* t(*it);
+		GEOM_FADE2D::Point2* p0=t->getCorner(0);
+		GEOM_FADE2D::Point2* p1=t->getCorner(1);
+		GEOM_FADE2D::Point2* p2=t->getCorner(2);
+       vec2<Precision> v2(p0->x(), p0->y());
+	   vec2<Precision> v1(p1->x(), p1->y());
+	   vec2<Precision> v0(p2->x(), p2->y());   
+	    if (IsEqual(cross(v0- v2, v1-v2), Precision(0.), (Precision)EPSF ))
 		   continue; //
 	   TriArray.push_back(v0);
 	   TriArray.push_back(v1);
 	   TriArray.push_back(v2);
-
-	   /*TriArray.push_back(vec2<Precision> (fit->vertex(2)->point().x(),fit->vertex(2)->point().y() ));
-	   TriArray.push_back(vec2<Precision> (fit->vertex(1)->point().x(),fit->vertex(1)->point().y() ));
-	   TriArray.push_back(vec2<Precision> (fit->vertex(0)->point().x(),fit->vertex(0)->point().y() ));*/
+	}
 		 
-   }
-
-
-
 }
+
+//template <typename Precision>
+//void Surface<Precision>::ConstrainTriangulate(std::vector<vec2<Precision> >& TriArray)
+//{
+//	typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+//
+//	typedef CGAL::Triangulation_vertex_base_2<K>                     Vb;
+//	typedef CGAL::Constrained_triangulation_face_base_2<K>           Fb;
+//	typedef CGAL::Triangulation_data_structure_2<Vb,Fb>              TDS;
+//	//typedef CGAL::Exact_predicates_tag                               Itag;
+//	typedef CGAL::Constrained_Delaunay_triangulation_2<K, TDS, CGAL::No_intersection_tag> CDT;
+// 
+//	std::map<vec2<Precision>, CDT::Vertex_handle, Vec2LessThan<Precision>> vertexMap;
+//	CDT cdt;
+//	CDT::Vertex_handle vh1, vh2; 
+//	for(int i = 0; i<mSeg.size(); i++ )
+//	{
+//		vec2<Precision> v0 = mVertex[mSeg[i].VId[0]].Pos;
+//		vec2<Precision> v1 = mVertex[mSeg[i].VId[1]].Pos;
+//		CDT::Point p0(v0.x , v0.y);
+//		CDT::Point p1(v1.x, v1.y);
+//        /*if (vertexMap.find(v0) != vertexMap.end())
+//			    vh1 = vertexMap[v0];
+//		   else */
+//		   {
+//			   vh1 = cdt.insert(p0);
+//			   //vertexMap[v0] = vh1;
+//		   }
+//		  /* if (vertexMap.find(v1) != vertexMap.end())
+//			    vh2 = vertexMap[v1];
+//		   else */
+//		   {
+//			    vh2 = cdt.insert(p1);
+//				 //vertexMap[v1] = vh2;
+//		   }
+//		   cdt.insert_constraint(vh1, vh2);
+//	}
+//	int count = cdt.number_of_faces() ; 
+//	TriArray.reserve(count*3);
+//    for (CDT::Finite_faces_iterator fit = cdt.finite_faces_begin();
+//       fit != cdt.finite_faces_end(); ++fit)
+//   {
+//	   vec2<Precision> v0(fit->vertex(2)->point().x(),fit->vertex(2)->point().y() );
+//	   vec2<Precision> v1(fit->vertex(1)->point().x(),fit->vertex(1)->point().y() );
+//	   vec2<Precision> v2(fit->vertex(0)->point().x(),fit->vertex(0)->point().y() );   
+//	   if (IsEqual(cross(v0- v2, v1-v2), Precision(0.), (Precision)EPSF ))
+//		   continue; //
+//	   TriArray.push_back(v0);
+//	   TriArray.push_back(v1);
+//	   TriArray.push_back(v2);
+//
+//	   /*TriArray.push_back(vec2<Precision> (fit->vertex(2)->point().x(),fit->vertex(2)->point().y() ));
+//	   TriArray.push_back(vec2<Precision> (fit->vertex(1)->point().x(),fit->vertex(1)->point().y() ));
+//	   TriArray.push_back(vec2<Precision> (fit->vertex(0)->point().x(),fit->vertex(0)->point().y() ));*/
+//		 
+//   }
+
+
+
+//}
 
 template class Surface<float>;
 template class Surface<double>;

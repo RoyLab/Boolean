@@ -1,5 +1,6 @@
 #include "CSGMesh.h"
 #include <assert.h>
+
 #include "tbb\tick_count.h"
 namespace GS{
 
