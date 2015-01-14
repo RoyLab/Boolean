@@ -146,8 +146,7 @@ bool ObjParser::ReadSceneData(const char* pFilename )
 {
 
 	ifstream fin;
-	char input, input2;
-
+	char input;
 
 	// Open the file.
 	fin.open(pFilename);
@@ -286,7 +285,7 @@ bool ObjParser::ReadSceneData(const char* pFilename )
 
 void ObjParser::ReadFaceData(std::ifstream& ifs)
 {
-    char input, input2, input3;
+    char input;
     FaceType face;
     ifs.get(input);
     if(input == ' ')

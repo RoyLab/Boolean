@@ -6,7 +6,16 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Geomary3D", "..\Geomary3D\Geomary3D.vcxproj", "{8C16A720-C6AB-48F8-8508-BCC41D04C54F}"
 	ProjectSection(ProjectDependencies) = postProject
 		{96C0BC68-A3C0-455A-B934-023E6062DA32} = {96C0BC68-A3C0-455A-B934-023E6062DA32}
+		{D4B4907F-8B62-41B0-9708-85BCB245ED60} = {D4B4907F-8B62-41B0-9708-85BCB245ED60}
+		{4E33049F-D623-43D7-BA83-1DFABEB585F0} = {4E33049F-D623-43D7-BA83-1DFABEB585F0}
 	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Boolean", "Boolean\Boolean.vcxproj", "{4E33049F-D623-43D7-BA83-1DFABEB585F0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{96C0BC68-A3C0-455A-B934-023E6062DA32} = {96C0BC68-A3C0-455A-B934-023E6062DA32}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SceneParser", "..\SceneParser\SceneParser.vcxproj", "{D4B4907F-8B62-41B0-9708-85BCB245ED60}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,6 +31,14 @@ Global
 		{8C16A720-C6AB-48F8-8508-BCC41D04C54F}.Debug|Win32.Build.0 = Debug|Win32
 		{8C16A720-C6AB-48F8-8508-BCC41D04C54F}.Release|Win32.ActiveCfg = Release|Win32
 		{8C16A720-C6AB-48F8-8508-BCC41D04C54F}.Release|Win32.Build.0 = Release|Win32
+		{4E33049F-D623-43D7-BA83-1DFABEB585F0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4E33049F-D623-43D7-BA83-1DFABEB585F0}.Debug|Win32.Build.0 = Debug|Win32
+		{4E33049F-D623-43D7-BA83-1DFABEB585F0}.Release|Win32.ActiveCfg = Release|Win32
+		{4E33049F-D623-43D7-BA83-1DFABEB585F0}.Release|Win32.Build.0 = Release|Win32
+		{D4B4907F-8B62-41B0-9708-85BCB245ED60}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D4B4907F-8B62-41B0-9708-85BCB245ED60}.Debug|Win32.Build.0 = Debug|Win32
+		{D4B4907F-8B62-41B0-9708-85BCB245ED60}.Release|Win32.ActiveCfg = Release|Win32
+		{D4B4907F-8B62-41B0-9708-85BCB245ED60}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

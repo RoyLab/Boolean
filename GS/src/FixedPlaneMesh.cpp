@@ -181,6 +181,33 @@ void FixedPlaneMesh::AddPolygon(const FixedPlanePolygon& poly)
      return bsp;
  }
 
+ FixedPlaneMesh* ToFixedPlaneMesh(BaseMesh* mesh)
+{
+	assert(mesh->Implement()->m_bCoordNormalized);
+    FixedPlaneMesh* result = 
+		new FixedPlaneMesh(mesh->Implement()->m_TransformBBox, 
+		mesh->Implement()->mColorTable[0]);
 
+	int n = mesh->VertexCount();
+	double3 *vert = new double3[n];
+
+	for (int i = 0; i < n; i++)
+		vert[i] = static_filter(mesh->Vertex(i).pos);
+
+	auto &polygons = result->Ploygons();
+	
+	
+	n = mesh->PrimitiveCount();
+	for (int i = 0; i < n; i++)
+	{
+		auto &v1 = vert[mesh->TriangleInfo(i).VertexId[0]];
+		auto &v2 = vert[mesh->TriangleInfo(i).VertexId[1]];
+		auto &v3 = vert[mesh->TriangleInfo(i).VertexId[2]];
+		FixedPlanePolygon poly(v1, v2, v3);
+		polygons.push_back(poly);
+	}
+	delete [] vert;
+	return result;
+} 
 
 } 

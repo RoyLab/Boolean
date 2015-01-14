@@ -4,6 +4,8 @@
 #include "typedefs.h"
 #include "arithmetic.h"
 
+#pragma warning(disable: 4244)
+
 namespace GS{
 class Box3 {
 private:

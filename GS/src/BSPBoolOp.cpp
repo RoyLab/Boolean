@@ -7,7 +7,6 @@
 #include <iostream>
 #include <ctime>
 #include "BSPOctTree.h"
-#include <vld.h>
 
 namespace GS{
 
@@ -54,8 +53,8 @@ BaseMesh* BSPBoolOp::ComputeBoolean(BaseMesh* mesh1, BaseMesh* mesh2, BOOL_OP op
     mesh1->NormalizeCoord(&bbox);
     mesh2->NormalizeCoord(&bbox);
 
-    FixedPlaneMesh* pPlaneMesh1 = mesh1->ToFixedPlaneMesh();
-    FixedPlaneMesh* pPlaneMesh2 = mesh2->ToFixedPlaneMesh();
+    FixedPlaneMesh* pPlaneMesh1 = ToFixedPlaneMesh(mesh1);
+    FixedPlaneMesh* pPlaneMesh2 = ToFixedPlaneMesh(mesh2);
     BaseMesh* pMesh = ComputeBoolean(pPlaneMesh1, pPlaneMesh2, op);
     delete pPlaneMesh1;
     delete pPlaneMesh2;

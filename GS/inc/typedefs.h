@@ -1,3 +1,4 @@
+#pragma warning(disable:4005)
 #ifndef _TYPEDEFS_H_
 #define _TYPEDEFS_H_
 #include <functional>

@@ -4,6 +4,8 @@
 #include "configure.h"
 #include "typedefs.h"
 #include "Geometry.h"
+#include <D3DX11.h>
+#include "D3D11Buffer.h"
 
 
 namespace GS{

@@ -64,7 +64,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\work\geomary3D\GS\lib\Debug;C:\work\geomary3D\SceneParser\lib\Debug;C:\Program Files\Autodesk\FBX\FBX SDK\2015.1\lib\vs2012\x86\debug;C:/Program Files/CGAL-4.4/lib;C:/Program Files/CGAL-4.4/lib/$(Configuration);$(BOOST_INCLUDEDIR)/lib32-msvc-11.0;$(BOOST_INCLUDEDIR)/lib32-msvc-11.0/$(Configuration);C:\Program Files %28x86%29\tbb42\lib\ia32\vc11;C:\fade2d_v1.19\fadeRelease\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\work\geomary3D\GS\lib\Debug;C:\work\geomary3D\GSTest\Debug;C:\work\geomary3D\SceneParser\lib\Debug;C:\Program Files\Autodesk\FBX\FBX SDK\2015.1\lib\vs2012\x86\debug;C:/Program Files/CGAL-4.4/lib;C:/Program Files/CGAL-4.4/lib/$(Configuration);$(BOOST_INCLUDEDIR)/lib32-msvc-11.0;$(BOOST_INCLUDEDIR)/lib32-msvc-11.0/$(Configuration);C:\Program Files %28x86%29\tbb42\lib\ia32\vc11;C:\fade2d_v1.19\fadeRelease\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>gs.lib;SceneParser.lib;libfbxsdk-md.lib;C:\Program Files\CGAL-4.4\auxiliary\gmp\lib\libmpfr-4.lib;C:\Program Files\CGAL-4.4\auxiliary\gmp\lib\libgmp-10.lib;tbb_debug.lib;fade2D_vc11_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>

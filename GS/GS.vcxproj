@@ -41,8 +41,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>.\lib\$(Configuration)\</OutDir>
-    <IncludePath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(IncludePath)</IncludePath>
+    <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;$(IncludePath)</IncludePath>
@@ -55,7 +55,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\work\geomary3D\GS\inc;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\Program Files\CGAL-4.4\include;$(BOOST_INCLUDEDIR);C:\Program Files %28x86%29\tbb42\include;C:\fade2d_v1.19\fadeRelease\include_fade2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WindowsSDK_IncludePath);$(DXSDK_DIR)\include;..\gs\inc;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\Program Files\CGAL-4.4\include;$(BOOST_INCLUDEDIR);C:\Program Files %28x86%29\tbb42\include;C:\fade2d_v1.19\fadeRelease\include_fade2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -93,43 +93,22 @@
     <ClInclude Include="inc\arithmetic.h" />
     <ClInclude Include="inc\AutoPtr.h" />
     <ClInclude Include="inc\BaseMesh.h" />
-    <ClInclude Include="inc\BoolOp.h" />
     <ClInclude Include="inc\Box2.h" />
     <ClInclude Include="inc\Box3.h" />
-    <ClInclude Include="inc\BSPBoolOp.h" />
-    <ClInclude Include="inc\BSPOctTree.h" />
-    <ClInclude Include="inc\BSPTree.h" />
-    <ClInclude Include="inc\Camera.h" />
     <ClInclude Include="inc\configure.h" />
-    <ClInclude Include="inc\CSGExprNode.h" />
-    <ClInclude Include="inc\CSGMesh.h" />
-    <ClInclude Include="inc\CSGTree.h" />
-    <ClInclude Include="inc\D3D11Buffer.h" />
-    <ClInclude Include="inc\FixedBSPTree.h" />
-    <ClInclude Include="inc\FixedPlane.h" />
-    <ClInclude Include="inc\FixedPlaneMesh.h" />
-    <ClInclude Include="inc\FixedPolygon.h" />
     <ClInclude Include="inc\adaptive.h" />
-    <ClInclude Include="inc\Font.h" />
-    <ClInclude Include="inc\FontShader.h" />
+    <ClInclude Include="inc\D3D11Buffer.h" />
     <ClInclude Include="inc\Geometry.h" />
-    <ClInclude Include="inc\Global.h" />
     <ClInclude Include="inc\hashlookup.h" />
-    <ClInclude Include="inc\Light.h" />
     <ClInclude Include="inc\LineSegment.h" />
     <ClInclude Include="inc\LineSet.h" />
     <ClInclude Include="inc\mat2.h" />
     <ClInclude Include="inc\mat3.h" />
     <ClInclude Include="inc\mat4.h" />
-    <ClInclude Include="inc\MeshBoolOp.h" />
-    <ClInclude Include="inc\OctTree.h" />
     <ClInclude Include="inc\Plane.h" />
     <ClInclude Include="inc\PlaneMesh.h" />
     <ClInclude Include="inc\Polygon.h" />
     <ClInclude Include="inc\quaternion.h" />
-    <ClInclude Include="inc\Shader.h" />
-    <ClInclude Include="inc\Surface.h" />
-    <ClInclude Include="inc\Texture.h" />
     <ClInclude Include="inc\topology.h" />
     <ClInclude Include="inc\transform.h" />
     <ClInclude Include="inc\typedefs.h" />
@@ -137,41 +116,19 @@
     <ClInclude Include="inc\vec2.h" />
     <ClInclude Include="inc\vec3.h" />
     <ClInclude Include="inc\vec4.h" />
-    <ClInclude Include="inc\VirtualDeviceDx11.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\adaptive.cpp" />
     <ClCompile Include="src\BaseMesh.cpp" />
-    <ClCompile Include="src\BoolOp.cpp" />
-    <ClCompile Include="src\BSPBoolOp.cpp" />
-    <ClCompile Include="src\BSPOctTree.cpp" />
-    <ClCompile Include="src\BSPTree.cpp" />
-    <ClCompile Include="src\Camera.cpp" />
-    <ClCompile Include="src\CSGMesh.cpp" />
-    <ClCompile Include="SRC\CSGTree.cpp" />
     <ClCompile Include="src\D3D11Buffer.cpp" />
-    <ClCompile Include="src\FixedBSPTree.cpp" />
-    <ClCompile Include="src\FixedPlane.cpp" />
-    <ClCompile Include="src\FixedPlaneMesh.cpp" />
-    <ClCompile Include="src\FixedPolygon.cpp" />
-    <ClCompile Include="src\Font.cpp" />
-    <ClCompile Include="src\FontShader.cpp" />
-    <ClCompile Include="src\Global.cpp" />
-    <ClCompile Include="src\Light.cpp" />
     <ClCompile Include="src\LineSet.cpp" />
-    <ClCompile Include="src\MeshBoolOp.cpp" />
-    <ClCompile Include="src\OctTree.cpp" />
     <ClCompile Include="src\Plane.cpp" />
     <ClCompile Include="src\PlaneMesh.cpp" />
     <ClCompile Include="src\Polygon.cpp" />
-    <ClCompile Include="src\Shader.cpp" />
     <ClCompile Include="src\Surface.cpp" />
-    <ClCompile Include="src\VirtualDeviceDx11.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="inc\Intersect.inl" />
-    <None Include="Shaders\font.ps" />
-    <None Include="Shaders\font.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

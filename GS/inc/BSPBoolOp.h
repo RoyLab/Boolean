@@ -1,8 +1,10 @@
 #ifndef _BSP_BOOL_OP_H
 #define _BSP_BOOL_OP_H
 #include "BoolOp.h"
+
 namespace GS{
 
+	class FixedPlaneMesh;
 
 class BSPBoolOp : public BoolOp{
  

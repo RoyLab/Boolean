@@ -1,6 +1,7 @@
 #ifndef _GEOMETRY_H_
 #define _GEOMETRY_H_
-#include "D3D11Buffer.h"
+#include <D3DX11.h>
+
 namespace GS{
 class Geometry{
 

@@ -14,11 +14,7 @@
 #include "Plane.h"
 #include "PlaneMesh.h"
 #include "D3D11Buffer.h"
-#include "FixedPlaneMesh.h"
 
-//#include "tbb\blocked_range.h"
-//#include "tbb\parallel_reduce.h"
-//#include "tbb/spin_mutex.h"
 
 namespace GS{
 
@@ -143,8 +139,9 @@ public:
 		virtual ~BaseMesh();
 
         /// return  the number of facets in the mesh.
-		inline int                 PrimitiveCount () const { return mpMeshImp->PrimitiveCount(); }
-		inline int                 VertexCount    () const { return mpMeshImp->mVertex.size();}
+		BaseMeshImp*        Implement() {return mpMeshImp;}
+		int                 PrimitiveCount () const { return mpMeshImp->PrimitiveCount(); }
+		int                 VertexCount    () const { return mpMeshImp->mVertex.size();}
 		virtual BaseMesh*          Clone() ;
 		//virtual BaseMesh*          Add(BaseMesh* mesh);
 	/*	void                       Add(const Point3D& p1, const Point3D& p2, const Point3D& p3);*/
@@ -169,7 +166,6 @@ public:
 		ManifordType               GetManifordType() const {return mpMeshImp->meManifordType;}
 		void                       SetManifordType(ManifordType eManiford) {mpMeshImp->meManifordType =eManiford;}
         PlaneMesh*                 ToPlaneMesh() const ; 
-		 FixedPlaneMesh*           ToFixedPlaneMesh() const ;
 		virtual void               Render(ID3D11Device* device,ID3D11DeviceContext* dc, bool bForceFillData);
 	
 		//WR

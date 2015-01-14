@@ -9,7 +9,6 @@
 #include "adaptive.h"
 #include "tbb\parallel_for.h"
 #include "tbb\tick_count.h"
-#include "FixedPlaneMesh.h"
 
 
 namespace GS{
@@ -727,35 +726,6 @@ BaseMesh*  BaseMesh::Clone()
     //}
     // return pPlaneMesh; 
 }
-
- FixedPlaneMesh*  BaseMesh::ToFixedPlaneMesh() const 
- {
-	 assert(mpMeshImp->m_bCoordNormalized);
-     FixedPlaneMesh* result = new FixedPlaneMesh(
-		 mpMeshImp->m_TransformBBox, mpMeshImp->mColorTable[0]);
-
-	int n = VertexCount();
-	double3 *vert = new double3[n];
-
-	for (int i = 0; i < n; i++)
-		vert[i] = static_filter(Vertex(i).pos);
-
-	auto &tri = mpMeshImp->mTriangle;
-	auto &polygons = result->Ploygons();
-	
-	
-	n = PrimitiveCount();
-	for (int i = 0; i < n; i++)
-	{
-        auto &v1 = vert[tri[i].VertexId[0]];
-		auto &v2 = vert[tri[i].VertexId[1]];
-		auto &v3 = vert[tri[i].VertexId[2]];
-        FixedPlanePolygon poly(v1, v2, v3);
-		polygons.push_back(poly);
-	}
-    delete [] vert;
-	return result;
-} 
 
 
 void BaseMeshImp::NormalizeCoord(const Box3* bbox)

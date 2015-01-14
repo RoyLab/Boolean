@@ -38,6 +38,7 @@ private :
 	float4				mColor;
 };
 
+FixedPlaneMesh* ToFixedPlaneMesh(BaseMesh* mesh);
 
 
 }

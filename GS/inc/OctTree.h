@@ -10,6 +10,7 @@
 #include "AutoPtr.h"
 #include "configure.h"
 #include "LineSet.h"
+#include "FixedPlaneMesh.h"
 
 namespace GS{
 

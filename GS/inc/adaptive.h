@@ -1,4 +1,5 @@
 #pragma once
+#pragma warning(disable:4101)
 #include "typedefs.h"
 #include <cassert>
 
