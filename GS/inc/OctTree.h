@@ -22,6 +22,8 @@ enum OctNodeType{
     eIntered = 0x4
 };
 
+class MeshData;
+
 struct  PolygonObj{
     struct SharedData {
         OctNodeType meObjType;
@@ -33,11 +35,13 @@ struct  PolygonObj{
     AutoPtr<SharedData > mpSharedData;
     BaseMesh* mpMesh;
     int     mTriId;
+    MeshData* pMeshData; // roy
 public : 
     PolygonObj()
         :mpMesh(nullptr)
         ,mTriId(-1)
         ,mpSharedData(nullptr)
+        ,pMeshData(nullptr)
     {
  
     }
@@ -46,6 +50,7 @@ public :
         :mpMesh(pMesh)
         ,mTriId(triId)
         ,mpSharedData(nullptr)
+        ,pMeshData(nullptr)
     {
         
     }
@@ -55,6 +60,7 @@ public :
         :mpMesh(obj.mpMesh)
         ,mTriId(obj.mTriId)
         ,mpSharedData(obj.mpSharedData)
+        ,pMeshData(obj.pMeshData)
     {
         
     }
@@ -67,6 +73,7 @@ public :
         mpMesh = obj.mpMesh;
         mTriId = obj.mTriId;
         mpSharedData  = obj.mpSharedData;
+        pMeshData = obj.pMeshData;
         return *this;
     }
 
@@ -185,11 +192,12 @@ protected:
     void DetermineCriticalCell(std::vector<BaseMesh*>& meshes, const Box3 cells[], OctNodeType CellType[]);
     OctTreeNode*  CreateLeafNode(const Box3& bbox, OctNodeType  NodeType, std::vector<PolygonObj* >& polygons );
     void FillSplittingLine(OctTreeNode* pNode, LineSet& segSet, const float4& color);
+
     // for ray- cast purpose 
     int FindFirstNode(double tx0, double ty0, double tz0, double txm, double tym, double tzm); 
     int GetNextNode(double txm, int x, double tym, int y, double tzm, int z);
     void ProcessSubNode ( double tx0, double ty0, double tz0, double tx1, double ty1, double tz1, OctTreeNode* pNode, int& a, RayCastingTest& func );
-private: 
+protected:
     OctTreeNode* mpRoot;
     std::map<int, int> mMeshOrder;
     bool mbCarved ; 

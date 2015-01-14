@@ -204,30 +204,6 @@ BoolOp* LBSPBoolOp::GetInstance()
 
 BaseMesh* LBSPBoolOp::ComputeBoolean(BaseMesh* mesh1,  BaseMesh* mesh2, BOOL_OP op)
 {
-    
-    std::vector<BaseMesh*> meshes(2);
-    meshes[0] =mesh1;
-    meshes[1]= mesh2;
-    OctTree * pOctTree = new OctTree();
-    pOctTree->BuildOctTree(meshes);
-//    pOctTree->CarveTree();
-   // std::vector<FixedPlaneMesh*> criticalMeshes;
-    std::vector<BaseMesh*> criticalMeshes;
-    std::vector<BaseMesh*> nonecriticalMeshes;
-  //  pOctTree->GenMeshesFromCells(criticalMeshes, true);
-    pOctTree->GenMeshesFromCells(nonecriticalMeshes, eCritical);
-    delete pOctTree;
- //   delete criticalMeshes[1];
-    delete nonecriticalMeshes[1];
-   /* for (int i = 0; i < nonecriticalMeshes[0]->PrimitiveCount(); i++) 
-    {
-        const TriInfo&  info= nonecriticalMeshes[0]->TriangleInfo(i);
-        criticalMeshes[0]->Add(nonecriticalMeshes[0]->Vertex(info.VertexId[0]) , nonecriticalMeshes[0]->Vertex(info.VertexId[1]), nonecriticalMeshes[0]->Vertex(info.VertexId[2]));
-    }*/
-    //delete nonecriticalMeshes[0];
-    return nonecriticalMeshes[0];
-
-
     FixedBSPTree::SET_OP BSPOp;
     switch (op)
     {
@@ -243,10 +219,11 @@ BaseMesh* LBSPBoolOp::ComputeBoolean(BaseMesh* mesh1,  BaseMesh* mesh2, BOOL_OP 
         default :
             break;
     }
-	BaseMesh *result = new BaseMesh;
-	BSPOctree *tree = new BSPOctree(BSPOp);
-    tree->BSPOperation(mesh1, mesh2, &result);
-	return result;
+    BSPOctree* bspOctree = new BSPOctree(BSPOp);
+    BaseMesh* result = new BaseMesh;
+    bspOctree->BSPOperation(mesh1, mesh2, &result);
+    delete bspOctree;
+    return result;
 }
 
 BaseMesh*  LBSPBoolOp::Evalute(std::vector<BaseMesh*>& meshList, std::string& postfix) 

@@ -1,5 +1,4 @@
 #include "BSPOctTree.h"
-#include <vld.h>
 #include <ctime>
 #include <string>
 
@@ -305,8 +304,6 @@ BaseMesh* BSPOctree::CollectPolygons(BaseMesh* mesh1, BaseMesh* mesh2)
 
     // get all non-intersect nodes
     std::vector<OctLeafNode*> leaves;
-    //if (flag) GetLeafNodes(mpRoot, leaves, eNormal | eCritical);
-    //else GetLeafNodes(mpRoot, leaves, eNormal);
     GetLeafNodes(mpRoot, leaves, eNormal | eCritical);
 
     size_t t = leaves.size();

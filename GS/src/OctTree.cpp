@@ -570,8 +570,8 @@ void OctTree::RayCastingTest::operator() (OctLeafNode* pNode)
             mTriMap[pObj->mTriId] = true;
         }
 
-        if (!pObj->AABB().IsInBox(pt, et))
-            continue;
+        //if (!pObj->AABB().IsInBox(pt, et))
+        //    continue;
         int ret = pObj->RayFaceTest(pt, et, dir, splane);
         //Point on the face
         if (ret< 0 )

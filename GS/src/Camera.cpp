@@ -169,8 +169,8 @@ void Camera::ComputeProjectMatrix(float W, float H, float Near, float Far)
         //    0         0     f/(f-n)   1
         //    0         0    -fn/(f-n)  0
         //
-		mProjectionMatrix[0][0] = (10000 * Near) / W;
-        mProjectionMatrix[1][1] = (10000 * Near) / H;
+		mProjectionMatrix[0][0] = (2 * Near) / W;
+        mProjectionMatrix[1][1] = (2 * Near) / H;
         mProjectionMatrix[2][2] = Far * oneOverDepth;
         mProjectionMatrix[3][2] = (-Far * Near) * oneOverDepth;
         mProjectionMatrix[2][3] = 1;
