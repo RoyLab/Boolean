@@ -203,13 +203,13 @@ void FixedBSPTree::DeleteChilds(FixedBSPTreeNode* pNode)
 
 void FixedBSPTree::BuildBSPTree( std::vector<FixedPlanePolygon>& polygons)
 {
-    if (polygons.size() > 1)
+    //if (polygons.size() > 1)
         mpRoot = BuildTree(polygons);
-    else if (polygons.size()  == 1){
-        PlaneMap planes;
-        mpRoot = BuildTree(polygons[0], planes);
-        planes.clear();
-    }
+    //else if (polygons.size()  == 1){
+    //    PlaneMap planes;
+    //    mpRoot = BuildTree(polygons[0], planes);
+    //    planes.clear();
+    //}
 }
 
 PosRelation FixedBSPTree::ClassifyPoint(const double3& p, FixedBSPTreeNode* pNode) const

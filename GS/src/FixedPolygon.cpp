@@ -47,7 +47,7 @@ void FixedPlanePolygon::CreatePolygon(const FixedPlane& splane,  const FixedPlan
 
 			if (On == output.ClipByPlane(bbox[X0],	tmp)) break;
 			output.Clear();
-			tmp.ClipByPlane(bbox[X1], output);
+			if (On == tmp.ClipByPlane(bbox[X1], output)) output = tmp;
 		}
 		else
 		{
@@ -58,7 +58,7 @@ void FixedPlanePolygon::CreatePolygon(const FixedPlane& splane,  const FixedPlan
 
 			if (On == output.ClipByPlane(bbox[X0],	tmp)) break;
 			output.Clear();
-			tmp.ClipByPlane(bbox[X1], output);
+			if (On == tmp.ClipByPlane(bbox[X1], output)) output = tmp;
 		}
 		break;
 	case 1:
@@ -71,7 +71,7 @@ void FixedPlanePolygon::CreatePolygon(const FixedPlane& splane,  const FixedPlan
 			
  			if (On == output.ClipByPlane(bbox[Y0],	tmp)) break;
 			output.Clear();
-			tmp.ClipByPlane(bbox[Y1], output);
+			if (On == tmp.ClipByPlane(bbox[Y1], output)) output = tmp;
 		}
 		else
 		{
@@ -82,7 +82,7 @@ void FixedPlanePolygon::CreatePolygon(const FixedPlane& splane,  const FixedPlan
 			
 			if (On == output.ClipByPlane(bbox[Y0],	tmp)) break;
 			output.Clear();
-			tmp.ClipByPlane(bbox[Y1], output);
+			if (On == tmp.ClipByPlane(bbox[Y1], output)) output = tmp;
 		}
 		break;
 	case 2:
@@ -95,7 +95,7 @@ void FixedPlanePolygon::CreatePolygon(const FixedPlane& splane,  const FixedPlan
 			
 			if (On == output.ClipByPlane(bbox[Z0],	tmp)) break;
 			output.Clear();
-			tmp.ClipByPlane(bbox[Z1], output);
+			if (On == tmp.ClipByPlane(bbox[Z1], output)) output = tmp;
 		}
 		else
 		{
@@ -106,7 +106,7 @@ void FixedPlanePolygon::CreatePolygon(const FixedPlane& splane,  const FixedPlan
 			
 			if (On == output.ClipByPlane(bbox[Z0],	tmp)) break;
 			output.Clear();
-			tmp.ClipByPlane(bbox[Z1], output);
+			if (On == tmp.ClipByPlane(bbox[Z1], output)) output = tmp;
 		}
 		break;
 	}

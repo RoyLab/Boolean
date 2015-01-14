@@ -10,6 +10,8 @@ namespace GS{
 struct FixedPlanePolygon{
         FixedPlane splane;
         std::vector<FixedPlane> bplanes;
+        float4 color;
+
 		FixedPlanePolygon(){}
         FixedPlanePolygon(const Polygon&);
         FixedPlanePolygon(const vec3<double>& v1, const vec3<double>& v2, const vec3<double>& v3);

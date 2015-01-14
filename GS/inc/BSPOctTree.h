@@ -10,7 +10,8 @@ namespace GS
 class SimpleMesh
 {
 public:
-    SimpleMesh(const BaseMesh*);
+    enum {PARA_NEGATE = 1};
+    SimpleMesh(const BaseMesh*, int = 0);
     virtual ~SimpleMesh(){}
 
     const std::vector<double3>& Vertex() const {return mVertex;}
@@ -25,7 +26,7 @@ class NormalMesh:
     public SimpleMesh
 {
 public:
-    NormalMesh(const BaseMesh*);
+    NormalMesh(const BaseMesh*, int = 0);
     virtual ~NormalMesh(){}
 
     void NormalizeCoord(const Box3* = 0);
@@ -40,7 +41,8 @@ protected:
     bool m_bCoordNormalized;
 };
 
-struct MeshData
+struct MeshData:
+    public PolygonObj
 {
     MeshData(const double3& pos1, const double3& pos2,
         const double3& pos3):
@@ -62,6 +64,9 @@ struct MeshData
     bool    bSplitted;
     std::list<FixedPlanePolygon*> Fragments;
     FixedPlanePolygon OrigPolygon;
+    
+    // for ray-crossing test jxd
+    unsigned index;
 };
 
 
@@ -76,21 +81,30 @@ public:
     typedef std::vector<unsigned>  PolygonPtrList;
     typedef std::vector<MeshData>   PolygonList;
 
-    BSPOctree(FixedBSPTree::SET_OP op): mOperation(op){}
+    BSPOctree(FixedBSPTree::SET_OP op):
+        mOperation(op)/*, mpBaseMesh1(nullptr), mpBaseMesh2(nullptr)*/{}
     virtual ~BSPOctree(void);
 
-    void BSPOperation(const BaseMesh*, const BaseMesh*, BaseMesh**);
+    void BSPOperation(BaseMesh*, BaseMesh*, BaseMesh**);
 
 protected:
-    void PerformIteration(PolygonPtrList&, PolygonPtrList&, Box3&);
+    enum {MINUEND = 0, SUBTRAHEND = 1};
+    void PerformIteration(PolygonPtrList&, PolygonPtrList&, Box3&, OctTreeNode**);
     void DetermineCriticalCell(const Box3[], bool[]);
-    void PerformBoolean(PolygonPtrList&, PolygonPtrList&, const Box3&);
+    void PerformBoolean(PolygonPtrList&, PolygonPtrList&, const Box3&, OctTreeNode**);
     void SplitSpaceByXYZ(const Box3& bbox,  Box3 childBoxes[]);
+    bool CheckValid(const double3&, BaseMesh*, int = MINUEND);
+    void FillOctreeLeafNode(PolygonPtrList&, PolygonPtrList&, OctLeafNode*);
+    bool LookUpRelation(bool judge, bool flag);
+    BaseMesh* CollectPolygons(BaseMesh* mesh1, BaseMesh* mesh2);
+    bool NeedInserted(bool isCellInMesh, int = MINUEND);
 
     PolygonList         mMesh1, mMesh2;
     Box3                mAABB1, mAABB2;
     std::vector<FixedPlanePolygon> mPlanePolygon;
     FixedBSPTree::SET_OP mOperation;
+
+    //BaseMesh *mpBaseMesh1, *mpBaseMesh2;
 };
 
 }

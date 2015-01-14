@@ -34,6 +34,7 @@ private :
 
     double3 mNormal;
     double      mD;
+    float4 color;
 };
 
 class FixedPlaneCompare : public std::binary_function<FixedPlane, FixedPlane, bool> {
