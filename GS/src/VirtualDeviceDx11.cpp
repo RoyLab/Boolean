@@ -143,8 +143,8 @@ bool VirtualDeviceDx11::Initialize(int screenWidth, int screenHeight, bool vsync
     swapChainDesc.BufferCount = 1;
 
 	// Set the width and height of the back buffer.
-    swapChainDesc.BufferDesc.Width = screenWidth;
-    swapChainDesc.BufferDesc.Height = screenHeight;
+    swapChainDesc.BufferDesc.Width = 800;
+    swapChainDesc.BufferDesc.Height = 600;
 
 	// Set regular 32-bit surface for the back buffer.
     swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -167,8 +167,8 @@ bool VirtualDeviceDx11::Initialize(int screenWidth, int screenHeight, bool vsync
 	// Set the handle for the window to render to.
     swapChainDesc.OutputWindow = hwnd;
 
-	// Turn multisampling off.
-    swapChainDesc.SampleDesc.Count = 1;
+	// Turn multisampling on.
+    swapChainDesc.SampleDesc.Count = 4;
     swapChainDesc.SampleDesc.Quality = 0;
 
 	// Set to full screen or windowed mode.
@@ -226,14 +226,14 @@ bool VirtualDeviceDx11::Initialize(int screenWidth, int screenHeight, bool vsync
 	m_deviceContext->OMSetRenderTargets(1, &m_renderTargetView, m_depthStencilView);
 
 	// Setup the raster description which will determine how and what polygons will be drawn.
-	rasterDesc.AntialiasedLineEnable = false;
+	rasterDesc.AntialiasedLineEnable = true;
 	rasterDesc.CullMode =  D3D11_CULL_NONE;
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
 	rasterDesc.FillMode = D3D11_FILL_SOLID;
 	rasterDesc.FrontCounterClockwise = false;
-	rasterDesc.MultisampleEnable = false;
+	rasterDesc.MultisampleEnable = true;
 	rasterDesc.ScissorEnable = false;
 	rasterDesc.SlopeScaledDepthBias = 0.0f;
 
@@ -400,7 +400,7 @@ bool VirtualDeviceDx11::CreateDepthStencilView(int width, int height)
 	depthBufferDesc.MipLevels = 1;
 	depthBufferDesc.ArraySize = 1;
 	depthBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-	depthBufferDesc.SampleDesc.Count = 1;
+	depthBufferDesc.SampleDesc.Count = 4;
 	depthBufferDesc.SampleDesc.Quality = 0;
 	depthBufferDesc.Usage = D3D11_USAGE_DEFAULT;
 	depthBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
@@ -457,7 +457,7 @@ bool VirtualDeviceDx11::CreateDepthStencilView(int width, int height)
 	depthStencilViewDesc.Texture2D.MipSlice = 0;
 
 	// Create the depth stencil view.
-	result = m_device->CreateDepthStencilView(m_depthStencilBuffer, &depthStencilViewDesc, &m_depthStencilView);
+	result = m_device->CreateDepthStencilView(m_depthStencilBuffer, NULL, &m_depthStencilView);
 	if(FAILED(result))
 	{
 		return false;

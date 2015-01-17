@@ -74,7 +74,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\work\geomary3D\GS\inc;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\Program Files\CGAL-4.4\include;$(BOOST_INCLUDEDIR);C:\Program Files %28x86%29\tbb42\include;C:\fade2d_v1.19\fadeRelease\include_fade2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WindowsSDK_IncludePath);$(DXSDK_DIR)\include;..\gs\inc;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\Program Files\CGAL-4.4\include;$(BOOST_INCLUDEDIR);C:\Program Files %28x86%29\tbb42\include;C:\fade2d_v1.19\fadeRelease\include_fade2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>

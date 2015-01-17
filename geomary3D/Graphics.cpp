@@ -76,6 +76,7 @@ void  CGraphics::ResizeWindow(int width, int height)
 	if (m_pD3D)
 		m_pD3D->Resize(width, height);
 
+    mCamera.SetProjectionMode(true);
 	mCamera.SetExtends(width, height);
 }
 

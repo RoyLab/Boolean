@@ -87,8 +87,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\work\geomary3D\SceneParser\inc;C:\work\geomary3D\GS\inc;C:\Program Files\Autodesk\FBX\FBX SDK\2015.1\include;C:\Program Files %28x86%29\tbb42\include;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <SDLCheck>false</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\work\geomary3D\SceneParser\inc;C:\work\geomary3D\GS\inc;C:\Program Files\Autodesk\FBX\FBX SDK\2014.2.1\include;C:\Program Files %28x86%29\tbb42\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
@@ -97,7 +97,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>C:\work\geomary3D\GS\lib\Release;C:\work\geomary3D\SceneParser\lib\Release;C:\Program Files\Autodesk\FBX\FBX SDK\2015.1\lib\vs2012\x86\release;C:/Program Files/CGAL-4.4/lib;C:/Program Files/CGAL-4.4/lib/$(Configuration);$(BOOST_INCLUDEDIR)/lib32-msvc-11.0;$(BOOST_INCLUDEDIR)/lib32-msvc-11.0/$(Configuration);C:\Program Files %28x86%29\tbb42\lib\ia32\vc11;C:\fade2d_v1.19\fadeRelease\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\GS\lib\Release;..\GSTest\Release;..\SceneParser\lib\Release;$(FBX_DIR)\lib\vs2012\x86\Release;C:/Program Files/CGAL-4.4/lib;C:/Program Files/CGAL-4.4/lib/$(Configuration);$(BOOST_INCLUDEDIR)/lib32-msvc-11.0;$(BOOST_INCLUDEDIR)/lib32-msvc-11.0/$(Configuration);C:\Program Files %28x86%29\tbb42\lib\ia32\vc11;C:\fade2d_v1.19\fadeRelease\Win32;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>gs.lib;SceneParser.lib;libfbxsdk-md.lib;C:\Program Files\CGAL-4.4\auxiliary\gmp\lib\libmpfr-4.lib;C:\Program Files\CGAL-4.4\auxiliary\gmp\lib\libgmp-10.lib;tbb.lib;fade2D_vc11_Release.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>

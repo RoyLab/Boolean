@@ -13,6 +13,7 @@ LineSet::LineSet(bool bUseUniqueVertex )
     : mbUniqueVertex(bUseUniqueVertex)
     , mPrimitiveCapacity(INIT_PRIMITIVE_CAPACITY)
     , mPointsCapacity(INIT_VERTEX_CAPACITY)
+    , mpVB(nullptr), mpIB(nullptr)
 {
     mPoints.reserve(mPointsCapacity);
     mSegs.reserve(INIT_PRIMITIVE_CAPACITY);
