@@ -110,6 +110,7 @@
     <ClInclude Include="inc\Polygon.h" />
     <ClInclude Include="inc\quaternion.h" />
     <ClInclude Include="inc\SimpleMesh.h" />
+    <ClInclude Include="inc\Surface.h" />
     <ClInclude Include="inc\topology.h" />
     <ClInclude Include="inc\transform.h" />
     <ClInclude Include="inc\typedefs.h" />

@@ -9,6 +9,8 @@
 #include "Box3.h"
 #include "hashlookup.h"
 #include "LineSegment.h"
+#pragma warning(disable:4018)
+
 namespace GS{
 
 

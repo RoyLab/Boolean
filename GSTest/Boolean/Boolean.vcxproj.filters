@@ -60,9 +60,6 @@
     <ClInclude Include="..\..\GS\inc\Global.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\GS\inc\Surface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\GS\inc\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>

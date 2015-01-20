@@ -11,7 +11,7 @@ namespace CSG
 
     void BuildOctree(OctreeNode* root, Octree* pOctree)
     {
-        assert(root || pOctree);
+        assert(root && pOctree);
 
         if (root->TriangleTable.size() < 2)
             root->Type = NODE_SIMPLE;
@@ -55,9 +55,9 @@ namespace CSG
                     for (uint j = 0; j < 8; j++)
                     {
                         count = 0;
-                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri[0]])) count++;
-                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri[1]])) count++;
-                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri[2]])) count++;
+                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri.VertexIndex[0]])) count++;
+                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri.VertexIndex[1]])) count++;
+                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri.VertexIndex[2]])) count++;
                         if (count > 0)
                         {
                             root->Child[j].TriangleTable[pMesh].push_back(triangles[i]);
@@ -69,19 +69,29 @@ namespace CSG
             }
 
             for (uint i = 0; i < 8; i++)
+            {
+                for (auto &itr: root->TriangleTable)
+                {
+                    auto &childTab = root->Child[i].TriangleTable;
+                    if (childTab.find(itr.first) == childTab.end())
+                        root->Child[i].DiffMeshIndex.emplace_back(itr.first->ID);
+                }
+
                 BuildOctree(root->Child+i, pOctree);
+            }
         }
         else root->Type = NODE_COMPOUND;
     }
 
 
-    Octree* BuildOctree(CSGMesh** meshList, unsigned num)
+    Octree* BuildOctree(CSGMesh** meshList, unsigned num, int** reltab)
     {
         if (!num) return NULL;
 
         Octree* pOctree = new Octree;
         pOctree->pMesh = meshList;
         pOctree->nMesh = num;
+        pOctree->ppRelationTable = reltab;
 
         OctreeNode*& root = pOctree->Root;
         root = new OctreeNode;
@@ -111,6 +121,11 @@ namespace CSG
         BuildOctree(root, pOctree);
 
         return pOctree;
+    }
+
+    Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree)
+    {
+        return REL_INSIDE;
     }
 
 

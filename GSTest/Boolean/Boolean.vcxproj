@@ -30,7 +30,6 @@
     <ClInclude Include="..\..\GS\inc\MeshBoolOp.h" />
     <ClInclude Include="..\..\GS\inc\OctTree.h" />
     <ClInclude Include="..\..\GS\inc\Shader.h" />
-    <ClInclude Include="..\..\GS\inc\Surface.h" />
     <ClInclude Include="..\..\GS\inc\Texture.h" />
     <ClInclude Include="..\..\GS\inc\VirtualDeviceDx11.h" />
   </ItemGroup>
