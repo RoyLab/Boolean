@@ -12,7 +12,7 @@ CGraphics::CGraphics()
 	, mCursorPos(0, 0)
 {
 	m_pD3D =0;
-	mExpression="0+1-2";
+	mExpression="0-1";
 }
 
 CGraphics::~CGraphics()

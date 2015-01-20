@@ -160,8 +160,8 @@ void CModelManager::BoolOperation(BooleanOP op, GS::BoolAlgorithm ba)
 void CModelManager::EvaluateBoolExpression(const std::string& expression)
 {
     ClearResults();
-    if (mpMeshList.size() < 3)
-        return ;
+    //if (mpMeshList.size() < 3)
+    //    return ;
     GS::BoolOp* pBoolOp = GS::BoolOpFactory::GetBoolOpObj(GS::eMeshBool);
     GS::BaseMesh* pResult = pBoolOp->Execute(mpMeshList,expression);
 	if (pResult )

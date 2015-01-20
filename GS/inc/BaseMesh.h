@@ -132,7 +132,7 @@ private:
     };
 
 class BaseMesh: public Geometry {
-        friend class SimpleMesh;
+        friend struct SimpleMesh;
 public:
         BaseMesh(bool bUseUniqueVertex = true);
          BaseMesh(const BaseMesh&);

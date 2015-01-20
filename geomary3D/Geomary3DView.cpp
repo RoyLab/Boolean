@@ -336,7 +336,7 @@ void CGeomary3DView::OnUpdateBoolExpression(CCmdUI *pCmdUI)
 {
     // TODO: Add your command update UI handler code here
 
-    pCmdUI->Enable(mpGraphic->GetModelMgr().Count() >= 3 );
+    //pCmdUI->Enable(mpGraphic->GetModelMgr().Count() >= 3 );
 }
 
 

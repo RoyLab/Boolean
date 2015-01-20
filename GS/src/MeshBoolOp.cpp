@@ -1,6 +1,8 @@
 #include <stack>
 #include "MeshBoolOp.h"
 #include "CSGTree.h"
+#include "Bool.h"
+#pragma comment(lib, "CSGBoolean")
 
 namespace GS{
     
@@ -34,19 +36,16 @@ BaseMesh*  MeshBoolOp::ComputeBoolean(BaseMesh* mesh1,  BaseMesh* mesh2, BOOL_OP
     }
 }
 
+
 BaseMesh* MeshBoolOp::DoCompute(CSGExprNode* node)
 {
-	BaseMesh* result= NULL;
-	CSGTree* tree =  new CSGTree();
-  
-	tree->AddExpr(node);
-      
-	tree->Evaluate1();
-    
-	result = tree->GetResultCopy(node);
- 
-	delete tree;
-	return result;
+	//CSGTree* tree =  new CSGTree();
+	//tree->AddExpr(node);
+	//tree->Evaluate1();
+	//BaseMesh* result = tree->GetResultCopy(node);
+	//delete tree;
+	//return result;
+    return CSG::BooleanOperation(node);
 }
 
 

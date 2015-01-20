@@ -81,53 +81,6 @@ static void getGravityCenter(FixedPlanePolygon* poly, double3& res)
 }
 
 
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-////////////////////////////SimpleMesh/////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-
-SimpleMesh::SimpleMesh(const BaseMesh* mesh, int para)
-{
-    switch (para)
-    {
-    case 0:
-        {
-            int n = (int)mesh->VertexCount();
-            for (int i = 0; i < n; i++)
-                mVertex.push_back(mesh->Vertex(i).pos);
-
-            n = (int)mesh->PrimitiveCount();
-            for (int i = 0; i < n; i++)
-            {
-                auto &index = mesh->mpMeshImp->mTriangle[i].VertexId;
-                mTriangle.emplace_back(index[0], index[1], index[2]);
-            }         
-        }
-        break;
-    case PARA_NEGATE:
-        {
-            int n = (int)mesh->VertexCount();
-            for (int i = 0; i < n; i++)
-                mVertex.push_back(mesh->Vertex(i).pos);
-
-            n = (int)mesh->PrimitiveCount();
-            for (int i = 0; i < n; i++)
-            {
-                auto &index = mesh->mpMeshImp->mTriangle[i].VertexId;
-                mTriangle.emplace_back(index[2], index[1], index[0]);
-            }
-        }
-    default:
-        break;
-    }
-
-}
-
-
 
 ///////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////

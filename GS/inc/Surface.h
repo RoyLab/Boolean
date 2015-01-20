@@ -86,7 +86,7 @@ public:
 	const vec3<Precision>& N() const {return mN;}
 	const vec3<Precision>& Origin() const {return mOrigin;}
 	const Box3& AABB() const {return mAABB3D;}
-	int  GetTriangleId(int idx) const { assert(idx < mTriIdList.size()); return mTriIdList[idx];}
+	int GetTriangleId(int idx) const { assert(idx < mTriIdList.size()); return mTriIdList[idx];}
 	int  TriangleCount() const {return mTriIdList.size();}
 	bool Triangulated() const { return mbTriangulated;}
     void Invalidate()  { mbTriangulated = false ;}

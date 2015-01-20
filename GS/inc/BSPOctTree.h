@@ -3,24 +3,11 @@
 #include "BaseMesh.h"
 #include "FixedBSPTree.h"
 #include "FixedPlaneMesh.h"
+#include "SimpleMesh.h"
 
 namespace GS
 {
 
-class SimpleMesh
-{
-public:
-    enum {PARA_NEGATE = 1};
-    SimpleMesh(const BaseMesh*, int = 0);
-    virtual ~SimpleMesh(){}
-
-    const std::vector<double3>& Vertex() const {return mVertex;}
-    const std::vector<int3>& Triangle() const {return mTriangle;}
-
-protected:
-    std::vector<double3> mVertex;
-    std::vector<int3> mTriangle;
-};
 
 class NormalMesh:
     public SimpleMesh

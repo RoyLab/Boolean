@@ -100,6 +100,9 @@
     <ClInclude Include="inc\D3D11Buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="inc\SimpleMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Surface.cpp">
