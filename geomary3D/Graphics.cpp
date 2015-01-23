@@ -77,7 +77,8 @@ void  CGraphics::ResizeWindow(int width, int height)
 		m_pD3D->Resize(width, height);
 
     mCamera.SetProjectionMode(true);
-	mCamera.SetExtends(width, height);
+    //mCamera.SetPosition(GS::float3(0,0,-60), GS::float3(0,0,0), GS::float3(0,1,0));
+    //mCamera.ComputeFovProjectMatrix(PI/4.0f, (float)width/height, 0.01f, 1000.0f);
 }
 
 bool CGraphics::Frame()
@@ -113,7 +114,7 @@ bool CGraphics::Render()
 	GS::float3 lightDir2 = normalize(mLightMgr.DefaultLight(1).Direction());
 	ComputeLightDirection(mLightMgr.DefaultLight(1), worldMat, lightDir2);
 	float SpecularFactor = mLightMgr.DefaultLight(0).SpecularFactor();
-	m_pD3D->BeginScene(1.0f, 1.0f, 1.0f, 1.0f);
+	m_pD3D->BeginScene(0.0f, 1.0f, 1.0f, 1.0f);
 	mShader.SetShaderMatrix(m_pD3D->GetDeviceContext(), worldMatrix, mCamera.ViewMatrix(), mCamera.ProjectionMatrix(), mCamera.Eye());
 	mShader.SetShaderLights(m_pD3D->GetDeviceContext(),mLightMgr.AmbientColor(), diffuse1, specular1, lightDir1, diffuse2, lightDir2, SpecularFactor);
 	mShader.Render( m_pD3D->GetDeviceContext());

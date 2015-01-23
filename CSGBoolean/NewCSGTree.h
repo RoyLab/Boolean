@@ -19,15 +19,6 @@ namespace CSG
         OP_DIFF
     };
 
-    enum Component
-    {
-        CPN_NONE  =  0,
-        CPN_INSIDE   =  1,
-        CPN_OUTSIDE  =  2,
-        CPN_SAME     =  4,
-        CPN_OPPOSITE =  8
-    };
-
     struct CSGTreeNode
     {
         NodeOp Operation;

@@ -1,6 +1,6 @@
-#pragma warning(disable:4005)
 #ifndef _TYPEDEFS_H_
 #define _TYPEDEFS_H_
+#pragma warning(disable:4005)
 #include <functional>
 #include "vec2.h"
 #include "vec3.h"

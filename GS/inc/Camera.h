@@ -32,8 +32,8 @@ public :
 	      float3  Up()        const {return float3(mViewMatrix[0].y, mViewMatrix[1].y, mViewMatrix[2].y);}
 	      float3  Right()     const {return float3(mViewMatrix[0].x, mViewMatrix[1].x, mViewMatrix[2].x);}
 		  float   Distance() const  {return length(Target() - Eye());}
-private :
-	void ComputeProjectMatrix(float W, float H, float Near, float Far);
+	
+    void ComputeProjectMatrix(float W, float H, float Near, float Far);
 	void ComputeFovProjectMatrix(float fov, float aspect, float Near, float Far );
 	void ComputeViewMatrix(const float3& pos, const float3& target, const float3& up);
 	void ComputeOrthoRange (const Box3& bounds, double& min, double& max) const;

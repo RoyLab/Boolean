@@ -4,7 +4,7 @@
 #include "typedefs.h"
 #include "arithmetic.h"
 #include "transform.h"
-#include "Intersect.inl"
+#include "Intersect.h"
 
 namespace GS{
 

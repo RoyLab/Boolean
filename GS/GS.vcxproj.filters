@@ -134,7 +134,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="inc\Intersect.inl">
+    <None Include="inc\Intersect.h">
       <Filter>Header Files</Filter>
     </None>
   </ItemGroup>

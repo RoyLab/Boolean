@@ -4,7 +4,8 @@
 
 namespace CSG
 {
-    CSGMesh::CSGMesh(GS::BaseMesh* pMesh):ID(-1)
+    CSGMesh::CSGMesh(GS::BaseMesh* pMesh):
+        ID(-1), pOrigin(pMesh)
     {
         int n = (int)pMesh->VertexCount();
         for (int i = 0; i < n; i++)
@@ -27,9 +28,20 @@ namespace CSG
     {
     }
 
-    GS::BaseMesh* ConverteToBaseMesh(GS::double3* input, int count)
+    GS::BaseMesh* ConverteToBaseMesh(GS::ListOfvertices &vertices)
     {
-        return NULL;
+        GS::BaseMesh* pResult = new GS::BaseMesh(false);
+        const uint n = vertices.size();
+        GS::double3 v[3];
+        for (uint i = 0; i < n; i+=3)
+        {
+            v[0] = vertices[i].pos;
+            v[1] = vertices[i+1].pos;
+            v[2] = vertices[i+2].pos;
+            pResult->AddTriangle(v);
+        }
+        
+        return pResult;
     }
 
 }

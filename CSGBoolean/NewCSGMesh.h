@@ -1,6 +1,7 @@
 #pragma once
 #include "AABB.h"
 #include <vector>
+#include "configure.h"
 
 namespace GS
 {
@@ -37,9 +38,10 @@ namespace CSG
         std::vector<TriangleInfo> mTriangle;
         AABB mAABB;
         int ID;
+        GS::BaseMesh* pOrigin;
     };
 
-    GS::BaseMesh* ConverteToBaseMesh(GS::double3* input, int count);
+    GS::BaseMesh* ConverteToBaseMesh(GS::ListOfvertices &vertex);
 }
 
 

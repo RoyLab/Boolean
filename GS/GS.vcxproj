@@ -55,7 +55,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(WindowsSDK_IncludePath);$(DXSDK_DIR)\include;..\gs\inc;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\Program Files\CGAL-4.4\include;$(BOOST_INCLUDEDIR);C:\Program Files %28x86%29\tbb42\include;C:\fade2d_v1.19\fadeRelease\include_fade2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(DXSDK_DIR)\include;..\gs\inc;C:\Program Files\CGAL-4.4\auxiliary\gmp\include;C:\Program Files\CGAL-4.4\include;$(BOOST_INCLUDEDIR);C:\Program Files %28x86%29\tbb42\include;C:\fade2d_v1.19\fadeRelease\include_fade2d;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,7 +130,7 @@
     <ClCompile Include="src\Surface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="inc\Intersect.inl" />
+    <None Include="inc\Intersect.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
