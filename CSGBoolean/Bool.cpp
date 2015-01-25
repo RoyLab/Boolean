@@ -217,9 +217,9 @@ namespace CSG
                 double3 &p1 = mesh1->mVertex[tri1.VertexIndex[1]];
                 double3 &p2 = mesh1->mVertex[tri1.VertexIndex[2]];
 
-                double3 &v0 = mesh1->mVertex[tri1.VertexIndex[0]];
-                double3 &v1 = mesh1->mVertex[tri1.VertexIndex[1]];
-                double3 &v2 = mesh1->mVertex[tri1.VertexIndex[2]];
+                double3 &v0 = mesh2->mVertex[tri2.VertexIndex[0]];
+                double3 &v1 = mesh2->mVertex[tri2.VertexIndex[1]];
+                double3 &v2 = mesh2->mVertex[tri2.VertexIndex[2]];
 
                 std::vector<GS::Seg3D<double>> intersects;
                 bool IsIntersected = 
@@ -249,7 +249,7 @@ namespace CSG
             for (auto &diffMesh: node->DiffMeshIndex)
             {
                 if (diffMesh.Rela == REL_UNKNOWN)
-                    diffMesh.Rela = PolyhedralInclusionTest(node->BoundingBox.Center(), pOctree, meshId);
+                    diffMesh.Rela = PolyhedralInclusionTest(node->BoundingBox.Center(), pOctree, diffMesh.ID);
                 int requestedRelation = requestedTab[diffMesh.ID];
                 if (!(diffMesh.Rela & requestedRelation))
                 {
@@ -366,7 +366,7 @@ namespace CSG
             for (auto &triIndex:leaf->TriangleTable) // for every mesh in a leaf node
             {
                 uint meshId = triIndex.first;
-                if (1 || CheckMeshNodePairValid(pOctree, leaf, meshId)) 
+                if (CheckMeshNodePairValid(pOctree, leaf, meshId)) 
                 {
                     auto &tri = triIndex.second;
                     auto &CarvedtriInfo = pOctree->CarvedTriangleInfo[meshId];
@@ -380,16 +380,16 @@ namespace CSG
         }
 
         // triangulate carved meshes
-        //vertex.clear();
-        //for (uint i = 0; i < pOctree->nMesh; i++)
-        //{
-        //    auto &carve = pOctree->CarvedTriangleInfo[i];
-        //    for (auto &carveTri: carve)
-        //    {
-        //        Triangulate(&carveTri.second);
-        //        MeshClassification(i, carveTri.first, &carveTri.second, pOctree, vertex);
-        //    }
-        //}
+        vertex.clear();
+        for (uint i = 0; i < pOctree->nMesh; i++)
+        {
+            auto &carve = pOctree->CarvedTriangleInfo[i];
+            for (auto &carveTri: carve)
+            {
+                Triangulate(&carveTri.second);
+                MeshClassification(i, carveTri.first, &carveTri.second, pOctree, vertex);
+            }
+        }
 
         for (uint i =0; i < pOctree->nMesh; i++)
             for (uint index: unTouchedTriangles[i])

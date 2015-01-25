@@ -20,7 +20,7 @@ template<typename Precision>
 Surface<Precision>::Surface(BaseMesh* pOwner, std::vector<int>& TriIdList)
  :mpOwner(pOwner)
  ,mTriIdList(TriIdList)
- ,mbHasConstraint(true)
+ ,mbHasConstraint(false)
  ,mbConcave(true)
  ,mbTriangulated(true)
  ,mVertexCapacity(INIT_VERTEX_CAPACITY)

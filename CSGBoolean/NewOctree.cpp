@@ -14,6 +14,92 @@ namespace CSG
 {
     typedef unsigned uint;
 
+    template<typename P>
+    bool TriangleAABBIntersectTest(const vec3<P>& v0, const vec3<P>& v1, const vec3<P>& v2, const AABB& bbox)
+    {
+        // 我认为，这里的不等号加上等于号之后，可以作为开集的相交测试
+        vec3<P> c = bbox.Center();
+        vec3<P> e = bbox.Diagonal()*0.5;
+        vec3<P> v00 = v0- c;
+        vec3<P> v10 = v1 -c ;
+        vec3<P> v20 = v2 -c ; 
+        //Compute edge vector 
+        vec3<P> f0 =  v10 -v00;
+        f0 = vec3<P>(fabs(f0.x), fabs(f0.y), fabs(f0.z));
+        vec3<P> f1 =  v20 - v10;
+        f1 = vec3<P>(fabs(f1.x), fabs(f1.y), fabs(f1.z));
+        vec3<P> f2 = v00 - v20;
+        f2 = vec3<P>(fabs(f2.x), fabs(f2.y), fabs(f2.z));
+        //Test axes a00 edge-edge test 
+        P p0 = v00.z * v10.y - v00.y * v10.z;
+        P p2 = v20.z * (v10.y - v00.y) -v20.y * (v10.z - v00.z);
+        P r  = e.y * f0.z + e.z * f0.y ; 
+        if ( max(- max (p0, p2), min(p0, p2)) > r )
+             return false ; 
+        // Test axes a01 edge -edge 
+        p0 = v10.z * v20.y - v10.y * v20.z;
+        p2 = v00.z*(v20.y - v10.y) - v00.y *( v20.z - v10.z);
+        r = e.y* f1.z + e.z * f1.y;
+        if ( max(- max (p0, p2), min(p0, p2)) > r )
+             return false ; 
+        // Test axes a02 edge  (dot (v2, a02))
+        p0  = v20.z *v00.y - v20.y * v00.z;
+        p2 = v10.z *(v00.y -v20.y) - v10.y *(v00.z - v20.z );
+        r = e.y *  f2.z  + e.z * f2.y; 
+        if ( max(- max (p0, p2), min(p0, p2)) > r )
+             return false ; 
+
+       // test axes a10 edge - edge  
+        p0 = v00.x* v10.z - v00.z * v10.x ; 
+        p2 = v20.x *(v10.z - v00.z) - v20.z *(v10.x - v00.x);
+        r = e.x * f0.z + e.z * f0.x ; 
+        if ( max(- max (p0, p2), min(p0, p2)) > r )
+             return false ; 
+        p0 = v10.x * v20.z- v10.z * v20.x;
+        p2 = v00.x*(v20.z - v10.z) - v00.z *( v20.x - v10.x);
+         r = e.x * f1.z + e.z * f1.x ; 
+        if ( max(- max (p0, p2), min(p0, p2)) > r )
+             return false ; 
+        p0  = v20.x *v00.z - v20.z * v00.x;
+        p2 = v10.x *(v00.z -v20.z) - v10.z *(v00.x - v20.x);
+        r = e.x * f2.z + e.z * f2.x ; 
+        if ( max(- max (p0, p2), min(p0, p2)) > r )
+             return false ; 
+
+        // test axes a20 edge 
+        p0 = v00.y* v10.x - v00.x * v10.y ; 
+        p2 = v20.y *(v10.x - v00.x) - v20.x *(v10.y - v00.y);
+        r = e.x * f0.y + e.y* f0.x ; 
+        if ( max(- max (p0, p2), min(p0, p2)) > r )
+             return false ; 
+        p0 = v10.y * v20.x - v10.x * v20.y;
+        p2 = v00.y*(v20.x - v10.x) - v00.x *( v20.y - v10.y);
+        r = e.x * f1.y + e.y* f1.x ; 
+        if ( max(- max (p0, p2), min(p0, p2)) > r )
+             return false ; 
+        p0  = v20.y *v00.x - v20.x * v00.y;
+        p2 = v10.y *(v00.x -v20.x) - v10.x *(v00.y - v20.y);
+        r = e.x * f2.y + e.y* f2.x ; 
+        if ( max(- max (p0, p2), min(p0, p2)) > r  )
+             return false ; 
+
+        //   /* test in X-direction */
+       P min, max ; 
+       FINDMINMAX(v00.x, v10.x, v20.x ,min,max);
+       if(min> e.x || max<-e.x ) return false;
+       FINDMINMAX(v00.y, v10.y, v20.y ,min,max);
+       if(min> e.y  || max<-e.y ) return false; 
+       FINDMINMAX(v00.z, v10.z, v20.z ,min,max);
+       if(min> e.z || max<-e.z ) return false;
+       //test 
+        vec3<P> normal = cross ((v10- v00), (v20 - v10));
+        P       d = - dot (normal, v0);
+        vec3<P>  e1 = bbox.Diagonal()*0.5;
+        P  r1 = dot(e1, vec3<P>(fabs(normal.x), fabs(normal.y), fabs(normal.z)));
+        P  s = dot (normal,  bbox.Center()) + d; 
+        return  (fabs(s) <= (r1)); 
+    }
+
     static void BuildOctree(OctreeNode* root, Octree* pOctree)
     {
         assert(root && pOctree);
@@ -60,14 +146,24 @@ namespace CSG
                     for (uint j = 0; j < 8; j++)
                     {
                         count = 0;
-                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri.VertexIndex[0]])) count++;
-                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri.VertexIndex[1]])) count++;
-                        if (root->Child[j].BoundingBox.IsInBox_LORC(pMesh->mVertex[tri.VertexIndex[2]])) count++;
+                        auto &v0 = pMesh->mVertex[tri.VertexIndex[0]];
+                        auto &v1 = pMesh->mVertex[tri.VertexIndex[1]];
+                        auto &v2 = pMesh->mVertex[tri.VertexIndex[2]];
+                        auto &aabb = root->Child[j].BoundingBox;
+
+                        if (aabb.IsInBox_LORC(v0)) count++;
+                        if (aabb.IsInBox_LORC(v1)) count++;
+                        if (aabb.IsInBox_LORC(v2)) count++;
                         if (count > 0)
                         {
                             root->Child[j].TriangleTable[triTab.first].push_back(triangles[i]);
                             root->Child[j].TriangleCount++;
                             if (count == 3) break;
+                        }
+                        else if(TriangleAABBIntersectTest(v0, v1, v2, aabb))
+                        {
+                            root->Child[j].TriangleTable[triTab.first].push_back(triangles[i]);
+                            root->Child[j].TriangleCount++;
                         }
                     }
                 }
@@ -221,7 +317,7 @@ namespace CSG
     }
 
 
-    static void RayCastThroughNode(OctreeNode* pNode, CSGMesh* pMesh, RayCastInfo* rayInfo)
+    static void RayCastThroughNode(OctreeNode* pNode, CSGMesh* pMesh, RayCastInfo* rayInfo, std::set<uint>& triSet)
     {
         if (pNode == NULL) return;
 
@@ -233,8 +329,7 @@ namespace CSG
 
         for (uint i = 0 ; i < n; i++)
         {
-            //if (!pObj->AABB().IsInBox(pt, et))
-            //    continue;
+            if (!triSet.insert(triangles[i]).second) continue;
             int ret = RayFaceTest(rayInfo, pMesh, triangles[i]);
             //Point on the face
             if (ret< 0 )
@@ -248,7 +343,7 @@ namespace CSG
     }
 
     static void ProcessSubNode(double tx0, double ty0, double tz0, double tx1, double ty1, double tz1, 
-                               OctreeNode* pNode, int& a, CSGMesh* pMesh, RayCastInfo* rayInfo)
+                               OctreeNode* pNode, int& a, CSGMesh* pMesh, RayCastInfo* rayInfo, std::set<uint>& triSet)
     {
         if (pNode == nullptr) return;
 
@@ -258,7 +353,7 @@ namespace CSG
             return; 
         if (pNode->Type != NODE_MIDSIDE)
         {
-            RayCastThroughNode(pNode, pMesh, rayInfo);
+            RayCastThroughNode(pNode, pMesh, rayInfo, triSet);
             return ; 
         }
 
@@ -272,35 +367,35 @@ namespace CSG
             switch (currNode) 
             { 
                 case 0: {
-                    ProcessSubNode(tx0,ty0,tz0,txm,tym,tzm, &pNode->Child[a], a, pMesh, rayInfo);
+                    ProcessSubNode(tx0,ty0,tz0,txm,tym,tzm, &pNode->Child[a], a, pMesh, rayInfo, triSet);
                     currNode = GetNextNode(txm,4,tym,2,tzm,1);
                     break;}
                 case 1: {
-                    ProcessSubNode(tx0,ty0,tzm,txm,tym,tz1, &pNode->Child[1^a], a, pMesh, rayInfo);
+                    ProcessSubNode(tx0,ty0,tzm,txm,tym,tz1, &pNode->Child[1^a], a, pMesh, rayInfo, triSet);
                     currNode = GetNextNode(txm,5,tym,3,tz1,8);
                     break;}
                 case 2: {
-                    ProcessSubNode(tx0,tym,tz0,txm,ty1,tzm, &pNode->Child[2^a], a, pMesh, rayInfo);
+                    ProcessSubNode(tx0,tym,tz0,txm,ty1,tzm, &pNode->Child[2^a], a, pMesh, rayInfo, triSet);
                     currNode = GetNextNode(txm,6,ty1,8,tzm,3);
                     break;}
                case 3: {
-                    ProcessSubNode(tx0,tym,tzm,txm,ty1,tz1, &pNode->Child[3^a], a, pMesh, rayInfo);
+                    ProcessSubNode(tx0,tym,tzm,txm,ty1,tz1, &pNode->Child[3^a], a, pMesh, rayInfo, triSet);
                     currNode = GetNextNode(txm,7,ty1,8,tz1,8);
                     break;}
                case 4: {
-                    ProcessSubNode(txm,ty0,tz0,tx1,tym,tzm, &pNode->Child[4^a], a, pMesh, rayInfo);
+                    ProcessSubNode(txm,ty0,tz0,tx1,tym,tzm, &pNode->Child[4^a], a, pMesh, rayInfo, triSet);
                     currNode = GetNextNode(tx1,8,tym,6,tzm,5);
                     break;}
               case 5: {
-                    ProcessSubNode(txm,ty0,tzm,tx1,tym,tz1, &pNode->Child[5^a], a, pMesh, rayInfo);
+                    ProcessSubNode(txm,ty0,tzm,tx1,tym,tz1, &pNode->Child[5^a], a, pMesh, rayInfo, triSet);
                     currNode = GetNextNode(tx1,8,tym,7,tz1,8);
                     break;}
               case 6: {
-                    ProcessSubNode(txm,tym,tz0,tx1,ty1,tzm, &pNode->Child[6^a], a, pMesh, rayInfo);
+                    ProcessSubNode(txm,tym,tz0,tx1,ty1,tzm, &pNode->Child[6^a], a, pMesh, rayInfo, triSet);
                     currNode = GetNextNode(tx1,8,ty1,8,tzm,7);
                     break;}
             case 7: {
-                    ProcessSubNode(txm,tym,tzm,tx1,ty1,tz1,&pNode->Child[7^a], a, pMesh, rayInfo);
+                    ProcessSubNode(txm,tym,tzm,tx1,ty1,tz1,&pNode->Child[7^a], a, pMesh, rayInfo, triSet);
                     currNode = 8;
                     break;}
             }
@@ -312,6 +407,7 @@ namespace CSG
     {
         assert(pOctree);
         AABB &RootBBox = pOctree->Root->BoundingBox;
+        std::set<uint> triSet;
 
         int a  =0; 
         if (rayInfo->dir.x < 0.0)
@@ -335,17 +431,20 @@ namespace CSG
         double3 t0 = (RootBBox.Min() - rayInfo->pt) /rayInfo->dir;
         double3 t1 = (RootBBox.Max() - rayInfo->pt) /rayInfo->dir;
         if (max(t0.x, max(t0.y, t0.z)) < min(t1.x, min(t1.y, t1.z)))
-            ProcessSubNode(t0.x, t0.y, t0.z, t1.x, t1.y, t1.z, pOctree->Root, a, pMesh, rayInfo);
+            ProcessSubNode(t0.x, t0.y, t0.z, t1.x, t1.y, t1.z, pOctree->Root, a, pMesh, rayInfo, triSet);
     }
     
     Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree, uint meshId)
     {
+        if (!pOctree->pMesh[meshId]->mAABB.IsInBox(point))
+            return REL_OUTSIDE;
+
         AABB &bbox = pOctree->Root->BoundingBox;
 
         RayCastInfo rayInfo;
         rayInfo.nCross = 0;
         rayInfo.pt = point;
-        rayInfo.et = bbox.Max() + double3(1.0,1.0,1.0);
+        rayInfo.et = bbox.Max() + double3(1,1,1);
         rayInfo.dir = GS::normalize(rayInfo.et-point);
 
         double3 edge = rayInfo.et - double3(0.0,bbox.Size().y*0.5,0.0) - point;
@@ -363,3 +462,4 @@ namespace CSG
     }
 
 } // namespace CSG
+

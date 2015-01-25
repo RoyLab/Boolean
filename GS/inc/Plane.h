@@ -117,4 +117,4 @@ std::ostream& operator<<(std::ostream& out, const Plane<P>& p)
 
 }
 
-#endif 
+#endif

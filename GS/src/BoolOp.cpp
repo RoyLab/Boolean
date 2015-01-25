@@ -17,7 +17,7 @@ BaseMesh* BoolOp::Union ( BaseMesh* mesh1,  BaseMesh* mesh2)
 	if (mesh2 == NULL)
 		return mesh1->Clone();
 	BaseMesh* result = NULL;
-	if (mesh1->AABB().Intersects(mesh2->AABB()))
+	if (1 ||  mesh1->AABB().Intersects(mesh2->AABB()))
 	{
         result = ComputeBoolean(mesh1, mesh2, eUnion);
 		if (result && result->PrimitiveCount() ==0 )
