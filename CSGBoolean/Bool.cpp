@@ -7,6 +7,7 @@
 #include "topology.h"
 #include <list>
 #include <set>
+#include <ctime>
 
 #define CSG_EXPORTS
 #include "Bool.h"
@@ -27,6 +28,8 @@ namespace CSG
 
         CSGTree* pCSGTree = ConvertCSGTree(input, &arrMesh, &nMesh);
         if (!pCSGTree) return NULL;
+
+        auto t0 = clock();
         
         int **relationTab = NULL;
         ParsingCSGTree(pCSGTree, nMesh, &relationTab);
@@ -40,8 +43,15 @@ namespace CSG
         GS::ListOfvertices vertices;
         GetResultMesh(pOctree, vertices);
         delete pOctree;
+
+        auto t1 = clock();
         
         GS::BaseMesh* pRes = ConverteToBaseMesh(vertices);
+        
+        long t = t1-t0;
+        char ch[32];
+        sprintf(ch, "time: %d", t);
+        MessageBox(0, ch, "time", 0);
 
         return pRes;
     }
@@ -92,7 +102,7 @@ namespace CSG
                 {
                     for (uint j = 0; j < k; j++)
                     {
-                        (*tab)[leftMeshList[i]][rightMeshList[j]] ^= REL_INSIDE;
+                        (*tab)[leftMeshList[i]][rightMeshList[j]] ^= REL_SAME ^ REL_INSIDE;
                         (*tab)[rightMeshList[j]][leftMeshList[i]] ^= REL_INSIDE;
                     }
                 }
@@ -304,7 +314,7 @@ namespace CSG
         {
             candidates = &single;
             // normals ? colors ?
-            AddVertices(pOctree, meshId, triId, vertices);
+            AddVertices(pOctree, meshId, triId, single);
         }
 
         const uint n = candidates->size();
@@ -327,8 +337,8 @@ namespace CSG
                 }
             }
             if (IsValid)
-                vertices.insert(vertices.end(), record->Triangulated.begin()+i,
-                    record->Triangulated.begin()+i+3);
+                vertices.insert(vertices.end(), candidates->begin()+i,
+                    candidates->begin()+i+3);
         }
     }
 

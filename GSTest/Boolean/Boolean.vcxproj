@@ -28,6 +28,7 @@
     <ClInclude Include="..\..\GS\inc\Global.h" />
     <ClInclude Include="..\..\GS\inc\Light.h" />
     <ClInclude Include="..\..\GS\inc\MeshBoolOp.h" />
+    <ClInclude Include="..\..\GS\inc\NewMeshBoolOp.h" />
     <ClInclude Include="..\..\GS\inc\OctTree.h" />
     <ClInclude Include="..\..\GS\inc\Shader.h" />
     <ClInclude Include="..\..\GS\inc\Texture.h" />
@@ -50,6 +51,7 @@
     <ClCompile Include="..\..\GS\src\Global.cpp" />
     <ClCompile Include="..\..\GS\src\Light.cpp" />
     <ClCompile Include="..\..\GS\src\MeshBoolOp.cpp" />
+    <ClCompile Include="..\..\GS\src\NewMeshBoolOp.cpp" />
     <ClCompile Include="..\..\GS\src\OctTree.cpp" />
     <ClCompile Include="..\..\GS\src\Shader.cpp" />
     <ClCompile Include="..\..\GS\src\VirtualDeviceDx11.cpp" />
@@ -110,7 +112,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\tbb42\include;$(BOOST_INCLUDEDIR);$(CGAL_DIR)\auxiliary\gmp\include;$(CGAL_DIR)\include\;$(DXSDK_DIR)\include;C:\work\geomary3D\GS\inc;..\GS\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files %28x86%29\tbb42\include;$(BOOST_INCLUDEDIR);$(CGAL_DIR)\auxiliary\gmp\include;$(CGAL_DIR)\include\;$(DXSDK_DIR)\include;C:\work\geomary3D\GS\inc;..\GS\inc;..\..\CSGBoolean;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

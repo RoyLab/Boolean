@@ -131,7 +131,7 @@ void CModelManager::BoolOperation(BooleanOP op, GS::BoolAlgorithm ba)
             pBoolOp = GS::BoolOpFactory::GetBoolOpObj(GS::eMeshBool);
             break;
         case GS::eBSPBool:
-             pBoolOp = GS::BoolOpFactory::GetBoolOpObj(GS::eBSPBool);
+             pBoolOp = GS::BoolOpFactory::GetBoolOpObj(GS::eNewMeshBool);
              break;
         case GS::eLBSPBool:
             pBoolOp = GS::BoolOpFactory::GetBoolOpObj(GS::eLBSPBool);

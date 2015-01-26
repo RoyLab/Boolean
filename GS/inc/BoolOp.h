@@ -12,6 +12,7 @@ enum BOOL_OP{
 };
 
 enum BoolAlgorithm{
+    eNewMeshBool,
     eMeshBool,
     eBSPBool,
     eLBSPBool

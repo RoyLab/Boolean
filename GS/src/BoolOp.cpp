@@ -3,6 +3,7 @@
 #include "BoolOp.h"
 #include "MeshBoolOp.h"
 #include "BSPBoolOp.h"
+#include "NewMeshBoolOp.h"
 namespace GS{
 
 
@@ -179,6 +180,8 @@ BoolOp* BoolOpFactory::GetBoolOpObj(BoolAlgorithm ba)
 {
     switch (ba)
     {
+        case eNewMeshBool:
+            return NewMeshBoolOp::GetInstance();
         case eMeshBool:
             return MeshBoolOp::GetInstance();
         case eBSPBool:

@@ -76,7 +76,7 @@ void  CGraphics::ResizeWindow(int width, int height)
 	if (m_pD3D)
 		m_pD3D->Resize(width, height);
 
-    mCamera.SetProjectionMode(true);
+    //mCamera.SetProjectionMode(true);
     //mCamera.SetPosition(GS::float3(0,0,-60), GS::float3(0,0,0), GS::float3(0,1,0));
     //mCamera.ComputeFovProjectMatrix(PI/4.0f, (float)width/height, 0.01f, 1000.0f);
 }

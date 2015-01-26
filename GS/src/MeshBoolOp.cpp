@@ -39,7 +39,6 @@ BaseMesh*  MeshBoolOp::ComputeBoolean(BaseMesh* mesh1,  BaseMesh* mesh2, BOOL_OP
 
 BaseMesh* MeshBoolOp::DoCompute(CSGExprNode* node)
 {
-    return CSG::BooleanOperation(node);
 	CSGTree* tree =  new CSGTree();
 	tree->AddExpr(node);
 	tree->Evaluate1();

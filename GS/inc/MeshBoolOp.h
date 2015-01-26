@@ -14,9 +14,9 @@ public :
 protected:
     virtual  BaseMesh*  ComputeBoolean(BaseMesh* mesh1,  BaseMesh* mesh2, BOOL_OP op) ;
     virtual  BaseMesh*  Evalute(std::vector<BaseMesh*>& meshList, std::string& postfix);
-             BaseMesh*  DoCompute(CSGExprNode* node);
+    virtual  BaseMesh*  DoCompute(CSGExprNode* node);
              CSGExprNode* EvalutePostfix( std::vector<BaseMesh*>& meshList, std::string& postfix);
-private:
+
     MeshBoolOp() {};
 };
 
