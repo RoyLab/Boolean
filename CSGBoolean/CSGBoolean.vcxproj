@@ -77,6 +77,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h" />
+    <ClInclude Include="Blist.h" />
     <ClInclude Include="Bool.h" />
     <ClInclude Include="NewOctree.h" />
     <ClInclude Include="NewCSGTree.h" />

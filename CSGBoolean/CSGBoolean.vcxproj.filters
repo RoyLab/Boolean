@@ -44,5 +44,8 @@
     <ClInclude Include="NewCSGMesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Blist.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -81,6 +81,7 @@ CGeomary3DView::CGeomary3DView()
 
 CGeomary3DView::~CGeomary3DView()
 {
+	FreeConsole();
 	delete mpGraphic;
 }
 
@@ -94,7 +95,7 @@ BOOL CGeomary3DView::PreCreateWindow(CREATESTRUCT& cs)
 void CGeomary3DView::OnInitialUpdate()
 {
 	CView::OnInitialUpdate();
-    //AllocConsole();
+    AllocConsole();
 	/*RECT rc;
 	GetClientRect(&rc);
 	LONG lw = rc.right - rc.left;

@@ -1,4 +1,5 @@
 #pragma once
+#include <Windows.h>
 
 #ifdef CSG_EXPORTS
 #define CSG_API __declspec(dllexport)
@@ -15,7 +16,7 @@ namespace GS
 
 namespace CSG
 {
-    extern "C" CSG_API GS::BaseMesh* BooleanOperation(GS::CSGExprNode* input);
+    extern "C" CSG_API GS::BaseMesh* BooleanOperation(GS::CSGExprNode* input, HANDLE stdoutput);
     extern "C" CSG_API GS::BaseMesh* BooleanOperation_MultiThread(GS::CSGExprNode* input);
 }
 

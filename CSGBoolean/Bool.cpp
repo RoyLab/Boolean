@@ -16,42 +16,68 @@ using GS::double3;
 
 namespace CSG
 {
+	HANDLE _output;
+	clock_t t0;
     typedef unsigned uint;
 
     void ParsingCSGTree(CSGTree* pCSGTree, uint num, int ***tab);
     void GetResultMesh(Octree* pOctree, GS::ListOfvertices &vertex);
 
-    extern "C" CSG_API GS::BaseMesh* BooleanOperation(GS::CSGExprNode* input)
+	void StdOutput(char* str)
+	{
+		std::string ch(str);
+		WriteConsole(_output, str, ch.size(), 0, 0);
+		WriteConsole(_output, "\n", 1, 0, 0);
+	}
+
+    extern "C" CSG_API GS::BaseMesh* BooleanOperation(GS::CSGExprNode* input, HANDLE stdoutput)
     {
+        char ch[32];
+		_output= stdoutput;
+
         CSGMesh** arrMesh = NULL;
         int nMesh = -1;
+
+		StdOutput("Start:");
+        t0 = clock();
 
         CSGTree* pCSGTree = ConvertCSGTree(input, &arrMesh, &nMesh);
         if (!pCSGTree) return NULL;
 
-        auto t0 = clock();
+        sprintf(ch, "Convert:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
         
         int **relationTab = NULL;
         ParsingCSGTree(pCSGTree, nMesh, &relationTab);
         if (!relationTab) return NULL;
+
+        sprintf(ch, "ParseTree:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
 
         Octree* pOctree = BuildOctree(arrMesh, nMesh, relationTab);
         if (!pOctree) return NULL;
 
         delete pCSGTree;
 
+        sprintf(ch, "BuildOctree:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
+
         GS::ListOfvertices vertices;
         GetResultMesh(pOctree, vertices);
         delete pOctree;
 
-        auto t1 = clock();
+        sprintf(ch, "GenMesh:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
         
         GS::BaseMesh* pRes = ConverteToBaseMesh(vertices);
-        
-        long t = t1-t0;
-        char ch[32];
-        sprintf(ch, "time: %d", t);
-        MessageBox(0, ch, "time", 0);
+
+        sprintf(ch, "Convert:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
 
         return pRes;
     }
@@ -366,6 +392,11 @@ namespace CSG
                     TriangleIntersectionTest(pOctree, i, j, leaf);
         }
 
+		char ch[32];
+        sprintf(ch, "Intersect:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
+
         // collect simple nodes
         leaves.clear();
         GetLeafNodes(pOctree->Root, leaves, NODE_SIMPLE);
@@ -389,6 +420,10 @@ namespace CSG
             }
         }
 
+        sprintf(ch, "CollectSimple:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
+
         // triangulate carved meshes
         vertex.clear();
         for (uint i = 0; i < pOctree->nMesh; i++)
@@ -400,6 +435,10 @@ namespace CSG
                 MeshClassification(i, carveTri.first, &carveTri.second, pOctree, vertex);
             }
         }
+
+        sprintf(ch, "CollectOther:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
 
         for (uint i =0; i < pOctree->nMesh; i++)
             for (uint index: unTouchedTriangles[i])
