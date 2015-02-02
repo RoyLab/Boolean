@@ -434,7 +434,7 @@ namespace CSG
             ProcessSubNode(t0.x, t0.y, t0.z, t1.x, t1.y, t1.z, pOctree->Root, a, pMesh, rayInfo, triSet);
     }
     
-    Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree, uint meshId)
+    Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree, uint meshId, bool IsInverse)
     {
         if (!pOctree->pMesh[meshId]->mAABB.IsInBox(point))
             return REL_OUTSIDE;
@@ -451,6 +451,17 @@ namespace CSG
         double3 norm = GS::normalize(GS::cross(rayInfo.dir, edge));
         rayInfo.splane = Plane<double>(norm, point);
         RayTraverse(pOctree, pOctree->pMesh[meshId], &rayInfo);
+
+		if (IsInverse)
+		{
+			switch (rayInfo.nCross)
+			{
+			case -1:    return REL_OPPOSITE;
+			case -2:    return REL_SAME;
+			case 1:     return REL_OUTSIDE;
+			default:    return REL_INSIDE;
+			}
+		}
 
         switch (rayInfo.nCross)
         {

@@ -162,7 +162,7 @@ void CModelManager::EvaluateBoolExpression(const std::string& expression)
     ClearResults();
     //if (mpMeshList.size() < 3)
     //    return ;
-    GS::BoolOp* pBoolOp = GS::BoolOpFactory::GetBoolOpObj(GS::eMeshBool);
+    GS::BoolOp* pBoolOp = GS::BoolOpFactory::GetBoolOpObj(GS::eNewMeshBool);
     GS::BaseMesh* pResult = pBoolOp->Execute(mpMeshList,expression);
 	if (pResult )
         mpResultMeshList.push_back(pResult);

@@ -89,7 +89,9 @@ namespace CSG
     };
 
     Octree* BuildOctree(CSGMesh** meshList, unsigned nMesh, int** reltab);
-    Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree, uint meshId);
+    Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree, uint meshId, bool = false);
+
+    inline bool IsLeaf(OctreeNode* node) {return !node->Child;}
 
 }// namespace CSG
 

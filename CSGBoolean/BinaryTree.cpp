@@ -3,6 +3,7 @@
 #include "CMesh.h"
 #include <vector>
 #include <assert.h>
+#include "COctree.h"
 
 namespace CSG
 {
@@ -59,42 +60,75 @@ namespace CSG
         return pRes;
     }
 
-	static CSGTreeNode* ConvertToPositiveTree(const CSGTreeNode* root, bool inverse)
+	static CSGTreeNode* ConvertToPositiveTree(const CSGTreeNode* root, bool inverse, uint level, uint& maxLvl, Octree* pOctree)
 	{
 		CSGTreeNode* res = new CSGTreeNode;
-		if (!root->pLeft && !root->pRight)
+		if (!root->pLeft && !root->pRight) // it is a leaf node
 		{
 			res->bInverse = inverse;
 			res->pMesh = root->pMesh;
+			pOctree->pMesh[res->pMesh->ID]->bInverse = res->bInverse;
+			maxLvl = (maxLvl < level)? level:maxLvl;
 		}
 		else
 		{
+			uint Ldepth(0), Rdepth(0);
 			if (root->Operation == OP_DIFF)
 			{
 				res->Operation = OP_INTERSECT;
-				res->pLeft = ConvertToPositiveTree(root->pLeft, inverse);
-				res->pRight = ConvertToPositiveTree(root->pRight, !inverse);
+				res->pLeft = ConvertToPositiveTree(root->pLeft, inverse, level+1, Ldepth, pOctree);
+				res->pRight = ConvertToPositiveTree(root->pRight, !inverse, level+1, Rdepth, pOctree);
 			}
 			else
 			{
 				res->Operation = root->Operation;
-				res->pLeft = ConvertToPositiveTree(root->pLeft, inverse);
-				res->pRight = ConvertToPositiveTree(root->pRight, !inverse);
+				res->pLeft = ConvertToPositiveTree(root->pLeft, inverse, level+1, Ldepth, pOctree);
+				res->pRight = ConvertToPositiveTree(root->pRight, !inverse, level+1, Rdepth, pOctree);
+			}
+			maxLvl = (Ldepth > Rdepth)? Ldepth:Rdepth;
+			if (Ldepth < Rdepth)
+			{
+				auto tmpNode = res->pLeft;
+				res->pLeft = res->pRight;
+				res->pRight = tmpNode;
 			}
 		}
-		
+
 		return res;
 	}
 
 
-	CSGTree* ConvertToPositiveTree(const CSGTree* myTree)
+	CSGTree* ConvertToPositiveTree(const CSGTree* myTree, Octree* pOctree)
 	{
 		CSGTree* result = new CSGTree;
-		result->pRoot = ConvertToPositiveTree(myTree->pRoot, false);
+		uint maxLvl = 0;
+		result->pRoot = ConvertToPositiveTree(myTree->pRoot, false, 0, maxLvl, pOctree);
 		return result;
 	}
 
-	
+	static void GetLeafList(CSGTreeNode* root, CSGTreeNode** arr)
+	{
+		if (root->pMesh)
+		{
+			assert(!arr[root->pMesh->ID]);
+			arr[root->pMesh->ID] = root;
+		}
+		else
+		{
+			GetLeafList(root->pLeft, arr);
+			GetLeafList(root->pRight, arr);
+		}
+	}
+
+
+	CSGTreeNode** GetLeafList(CSGTree* tree, uint num)
+	{
+		CSGTreeNode **arr = new CSGTreeNode*[num];
+		memset(arr, 0, sizeof(CSGTreeNode*)*num);
+		GetLeafList(tree->pRoot, arr);
+		return arr;
+	}
+
 
 }  // namespace CSG
 

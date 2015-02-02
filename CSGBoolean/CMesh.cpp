@@ -5,7 +5,7 @@
 namespace CSG
 {
     CSGMesh::CSGMesh(GS::BaseMesh* pMesh):
-        ID(-1), pOrigin(pMesh)
+        ID(-1), pOrigin(pMesh), bInverse(false)
     {
         int n = (int)pMesh->VertexCount();
         for (int i = 0; i < n; i++)

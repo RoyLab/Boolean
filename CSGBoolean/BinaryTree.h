@@ -8,6 +8,7 @@ namespace GS
 
 namespace CSG
 {
+	typedef unsigned uint;
     struct Octree;
     struct CSGMesh;
 
@@ -38,7 +39,8 @@ namespace CSG
     };
 
     CSGTree* ConvertCSGTree(GS::CSGExprNode* root, CSGMesh*** arrMesh, int *nMes); // convert nodes.
-	CSGTree* ConvertToPositiveTree(const CSGTree* myTree);
+	CSGTree* ConvertToPositiveTree(const CSGTree* tree, Octree* pOctree);
+	CSGTreeNode** GetLeafList(CSGTree* tree, uint num);
     
 } // namespace CSG
 

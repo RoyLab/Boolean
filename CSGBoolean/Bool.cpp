@@ -30,8 +30,8 @@ namespace CSG
 		WriteConsole(_output, "\n", 1, 0, 0);
 	}
 
-    extern "C" CSG_API GS::BaseMesh* BooleanOperation(GS::CSGExprNode* input, HANDLE stdoutput)
-    {
+	static GS::BaseMesh* BooleanOperation1(GS::CSGExprNode* input, HANDLE stdoutput)
+	{
         char ch[32];
 		_output= stdoutput;
 
@@ -80,6 +80,47 @@ namespace CSG
 		StdOutput(ch);
 
         return pRes;
+	}
+
+	static void RelationTest(OctreeNode* pNode, Octree* pOctree)
+	{
+		for (auto &pair: pNode->DiffMeshIndex)
+			pair.Rela = PolyhedralInclusionTest(pNode->BoundingBox.Center(), pOctree, pair.ID);
+
+		if (pNode->Child)
+		{
+			for (uint i = 0; i < 8; i++)
+				RelationTest(&pNode->Child[i], pOctree);
+		}
+	}
+
+	static void RelationTest(Octree* pOctree)
+	{
+		RelationTest(pOctree->Root, pOctree);
+	}
+
+
+	static GS::BaseMesh* BooleanOperation2(GS::CSGExprNode* input, HANDLE stdoutput)
+	{
+		char ch[32];
+		_output= stdoutput;
+
+        CSGMesh** arrMesh = NULL;
+        int nMesh = -1;
+        CSGTree* pCSGTree = ConvertCSGTree(input, &arrMesh, &nMesh);
+		auto pPostive = ConvertToPositiveTree(pCSGTree);
+
+        Octree* pOctree = BuildOctree(arrMesh, nMesh, 0);
+		RelationTest(pOctree);
+
+
+		return NULL;
+	}
+
+
+    extern "C" CSG_API GS::BaseMesh* BooleanOperation(GS::CSGExprNode* input, HANDLE stdoutput)
+    {
+		return BooleanOperation2(input, stdoutput);
     }
 
     extern "C" CSG_API GS::BaseMesh* BooleanOperation_MultiThread(GS::CSGExprNode* input)
@@ -178,8 +219,6 @@ namespace CSG
         std::vector<uint> meshList;
         ParseNode(pCSGTree->pRoot, tab, num, &meshList);
     }
-
-    static inline bool IsLeaf(OctreeNode* node) {return !node->Child;}
 
     static void GetLeafNodes(OctreeNode* pNode, std::list<OctreeNode*>& leaves, int NodeType)
     {
