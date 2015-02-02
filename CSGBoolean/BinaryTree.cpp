@@ -1,12 +1,12 @@
-#include "NewCSGTree.h"
+#include "BinaryTree.h"
 #include "CSGExprNode.h"
-#include "NewCSGMesh.h"
+#include "CMesh.h"
 #include <vector>
 #include <assert.h>
 
 namespace CSG
 {
-    void ConvertCSGTreeNode(GS::CSGExprNode* input, CSGTreeNode** pRoot, std::vector<CSGMesh*>& meshList)
+    static void ConvertCSGTreeNode(GS::CSGExprNode* input, CSGTreeNode** pRoot, std::vector<CSGMesh*>& meshList)
     {
         if (!input) return;
 
@@ -59,6 +59,42 @@ namespace CSG
         return pRes;
     }
 
+	static CSGTreeNode* ConvertToPositiveTree(const CSGTreeNode* root, bool inverse)
+	{
+		CSGTreeNode* res = new CSGTreeNode;
+		if (!root->pLeft && !root->pRight)
+		{
+			res->bInverse = inverse;
+			res->pMesh = root->pMesh;
+		}
+		else
+		{
+			if (root->Operation == OP_DIFF)
+			{
+				res->Operation = OP_INTERSECT;
+				res->pLeft = ConvertToPositiveTree(root->pLeft, inverse);
+				res->pRight = ConvertToPositiveTree(root->pRight, !inverse);
+			}
+			else
+			{
+				res->Operation = root->Operation;
+				res->pLeft = ConvertToPositiveTree(root->pLeft, inverse);
+				res->pRight = ConvertToPositiveTree(root->pRight, !inverse);
+			}
+		}
+		
+		return res;
+	}
+
+
+	CSGTree* ConvertToPositiveTree(const CSGTree* myTree)
+	{
+		CSGTree* result = new CSGTree;
+		result->pRoot = ConvertToPositiveTree(myTree->pRoot, false);
+		return result;
+	}
+
+	
 
 }  // namespace CSG
 

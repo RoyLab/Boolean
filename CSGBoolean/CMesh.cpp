@@ -1,4 +1,4 @@
-#include "NewCSGMesh.h"
+#include "CMesh.h"
 #include "BaseMesh.h"
 #pragma comment(lib, "GS")
 

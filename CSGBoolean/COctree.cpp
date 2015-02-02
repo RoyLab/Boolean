@@ -1,5 +1,5 @@
-#include "NewOctree.h"
-#include "NewCSGMesh.h"
+#include "COctree.h"
+#include "CMesh.h"
 #include "Box3.h"
 #include "topology.h"
 #include <assert.h>

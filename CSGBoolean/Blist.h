@@ -1,5 +1,5 @@
 #pragma once
-#include "NewCSGTree.h"
+#include "BinaryTree.h"
 
 namespace CSG
 {

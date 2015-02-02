@@ -1,9 +1,9 @@
 #pragma warning(disable: 4800)
-#include "NewOctree.h"
-#include "NewCSGTree.h"
+#include "COctree.h"
+#include "BinaryTree.h"
 #include "CSGExprNode.h"
 #include "BaseMesh.h"
-#include "NewCSGMesh.h"
+#include "CMesh.h"
 #include "topology.h"
 #include <list>
 #include <set>

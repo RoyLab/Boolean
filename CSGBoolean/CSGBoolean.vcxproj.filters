@@ -15,16 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NewOctree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NewCSGTree.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Bool.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NewCSGMesh.cpp">
+    <ClCompile Include="Blist.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="COctree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BinaryTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -32,19 +35,19 @@
     <ClInclude Include="AABB.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NewOctree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NewCSGTree.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Bool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NewCSGMesh.h">
+    <ClInclude Include="Blist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Blist.h">
+    <ClInclude Include="CMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="COctree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BinaryTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

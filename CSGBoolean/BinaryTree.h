@@ -25,8 +25,11 @@ namespace CSG
         CSGTreeNode *pLeft, *pRight;
 
         CSGMesh* pMesh;
+		bool	 bInverse;
 
-        CSGTreeNode():pLeft(0), pRight(0), pMesh(0){}
+        CSGTreeNode():
+			pLeft(0), pRight(0), pMesh(0)
+			, bInverse(false){}
     };
 
     struct CSGTree
@@ -35,6 +38,7 @@ namespace CSG
     };
 
     CSGTree* ConvertCSGTree(GS::CSGExprNode* root, CSGMesh*** arrMesh, int *nMes); // convert nodes.
+	CSGTree* ConvertToPositiveTree(const CSGTree* myTree);
     
 } // namespace CSG
 

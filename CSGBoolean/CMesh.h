@@ -37,7 +37,7 @@ namespace CSG
         std::vector<double3> mVertex;
         std::vector<TriangleInfo> mTriangle;
         AABB mAABB;
-        int ID;
+        int ID;  // from Zero to N
         GS::BaseMesh* pOrigin;
     };
 
