@@ -67,7 +67,7 @@ namespace CSG
 		{
 			res->bInverse = inverse;
 			res->pMesh = root->pMesh;
-			pOctree->pMesh[res->pMesh->ID]->bInverse = res->bInverse;
+			res->pMesh->bInverse = res->bInverse;
 			maxLvl = (maxLvl < level)? level:maxLvl;
 		}
 		else

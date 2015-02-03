@@ -85,7 +85,8 @@ namespace CSG
 	static void RelationTest(OctreeNode* pNode, Octree* pOctree)
 	{
 		for (auto &pair: pNode->DiffMeshIndex)
-			pair.Rela = PolyhedralInclusionTest(pNode->BoundingBox.Center(), pOctree, pair.ID);
+			pair.Rela = PolyhedralInclusionTest(pNode->BoundingBox.Center(),
+			pOctree, pair.ID, pOctree->pMesh[pair.ID]->bInverse);
 
 		if (pNode->Child)
 		{
@@ -107,10 +108,11 @@ namespace CSG
 
         CSGMesh** arrMesh = NULL;
         int nMesh = -1;
-        CSGTree* pCSGTree = ConvertCSGTree(input, &arrMesh, &nMesh);
-		auto pPostive = ConvertToPositiveTree(pCSGTree);
 
+        CSGTree* pCSGTree = ConvertCSGTree(input, &arrMesh, &nMesh);
         Octree* pOctree = BuildOctree(arrMesh, nMesh, 0);
+
+		auto pPostive = ConvertToPositiveTree(pCSGTree, pOctree);
 		RelationTest(pOctree);
 
 
@@ -200,7 +202,6 @@ namespace CSG
         for (uint i: leftMeshList) meshList->push_back(i);
         for (uint i: rightMeshList) meshList->push_back(i);
     }
-
 
     static void ParsingCSGTree(CSGTree* pCSGTree, uint num, int ***tab)
     {
@@ -365,7 +366,6 @@ namespace CSG
         vInfo.pos = pOctree->pMesh[meshId]->mVertex[triInfo.VertexIndex[2]];
         vertices.push_back(vInfo);
     }
-
 
     static void MeshClassification(uint meshId, uint triId, CarvedInfo* record, Octree* pOctree, GS::ListOfvertices& vertices)
     {

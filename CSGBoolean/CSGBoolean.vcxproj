@@ -70,19 +70,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Blist.cpp" />
     <ClCompile Include="Bool.cpp" />
     <ClCompile Include="COctree.cpp" />
     <ClCompile Include="BinaryTree.cpp" />
     <ClCompile Include="CMesh.cpp" />
+    <ClCompile Include="ParseOctree.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h" />
-    <ClInclude Include="Blist.h" />
     <ClInclude Include="Bool.h" />
     <ClInclude Include="COctree.h" />
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="CMesh.h" />
+    <ClInclude Include="ParseOctree.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
