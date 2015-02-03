@@ -1,22 +1,16 @@
 #pragma once
+#include "precompile.h"
 #include "AABB.h"
-#include <vector>
 #include "Box3.h"
+#include <vector>
 #include "Intersect.h"
 #include "Surface.h"
-#include <set>
 #include <map>
-#include <list>
-
-
-namespace GS
-{
-    template <typename P> class Surface;
-}
-
 
 namespace CSG
 {
+	struct CSGTree;
+
     enum NodeType
     {
         NODE_UNKNOWN = 0,
@@ -34,17 +28,19 @@ namespace CSG
         REL_OPPOSITE = 8
     };
 
-    typedef unsigned uint;
     struct CSGMesh;
 
     struct DiffMeshInfo
     {
-        unsigned ID;
+        uint ID;
         Relation Rela;
 
-        DiffMeshInfo(unsigned i, Relation rel = REL_UNKNOWN):
-            ID(i), Rela(rel){}
+        DiffMeshInfo(uint i, Relation rel = REL_UNKNOWN):
+			ID(i), Rela(rel){}
     };
+
+	typedef bool SimpleData;
+	typedef CSGTree ComplexData;
 
     struct OctreeNode
     {
@@ -54,13 +50,13 @@ namespace CSG
         OctreeNode *Child, *Parent;
 
         std::vector<DiffMeshInfo> DiffMeshIndex;
-        std::map<unsigned, std::vector<unsigned>>  TriangleTable;
-        unsigned TriangleCount;
+        std::map<uint, std::vector<uint>>  TriangleTable;
+        uint TriangleCount;
 
-        std::vector<uint> ValidTable;
+		void *pRelationData;
 
-        OctreeNode():Child(0), Parent(0)
-        , TriangleCount(0){}
+        OctreeNode();
+		~OctreeNode();
     };
 
 
@@ -68,27 +64,25 @@ namespace CSG
     struct CarvedInfo
     {
         GS::Surface<double>* Surface;
-        //std::list<GS::Seg3D<double>> Carved;
-        GS::ListOfvertices Triangulated;
-        unsigned TriangulateCount;
-        std::set<unsigned> ToBeTest;
+        GS::ListOfvertices Triangles;
 
-        CarvedInfo():TriangulateCount(0), Surface(0){}
+        CarvedInfo():Surface(0){}
     };
 
-    typedef std::vector<std::map<unsigned, CarvedInfo>> TriangleRecord; // may be better as a vector
+    typedef std::vector<std::map<uint, CarvedInfo>> TriangleRecord; // may be better as a vector
 
     struct Octree
     {
         OctreeNode *Root;
         
         CSGMesh**   pMesh;
-        unsigned    nMesh;
-        int**       ppRelationTable;
-        TriangleRecord CarvedTriangleInfo;
+        uint			nMesh;
+
+		Octree();
+		~Octree();
     };
 
-    Octree* BuildOctree(CSGMesh** meshList, unsigned nMesh, int** reltab);
+    Octree* BuildOctree(CSGMesh** meshList, uint nMesh);
     Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree, uint meshId, bool = false);
 
     inline bool IsLeaf(OctreeNode* node) {return !node->Child;}

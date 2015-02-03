@@ -1,4 +1,7 @@
 #pragma once
+#include "precompile.h"
+#include "COctree.h"
+#include <map>
 
 namespace GS
 {
@@ -8,39 +11,62 @@ namespace GS
 
 namespace CSG
 {
-	typedef unsigned uint;
     struct Octree;
     struct CSGMesh;
 
-    enum NodeOp
+    enum BiNodeType
     {
-        OP_UNKNOWN = 0,
-        OP_UNION,
-        OP_INTERSECT,
-        OP_DIFF
+        TYPE_UNKNOWN = 0,
+        TYPE_UNION,
+        TYPE_INTERSECT,
+        TYPE_DIFF,
+		TYPE_LEAF
     };
 
     struct CSGTreeNode
     {
-        NodeOp Operation;
-        CSGTreeNode *pLeft, *pRight;
+        BiNodeType Type;
+        CSGTreeNode *pLeft, *pRight, *Parent;
 
         CSGMesh* pMesh;
 		bool	 bInverse;
 
-        CSGTreeNode():
-			pLeft(0), pRight(0), pMesh(0)
-			, bInverse(false){}
+		CSGTreeNode();
+		~CSGTreeNode();
     };
 
     struct CSGTree
     {
         CSGTreeNode* pRoot;
+		std::map<uint, CSGTreeNode*> Leaves;
+
+		CSGTree();
+		~CSGTree();
     };
 
     CSGTree* ConvertCSGTree(GS::CSGExprNode* root, CSGMesh*** arrMesh, int *nMes); // convert nodes.
-	CSGTree* ConvertToPositiveTree(const CSGTree* tree, Octree* pOctree);
-	CSGTreeNode** GetLeafList(CSGTree* tree, uint num);
-    
+	CSGTree* ConvertToPositiveTree(const CSGTree* tree);
+	Relation CompressCSGTree(CSGTree* tree, uint Id, Relation rel);
+
+    inline bool IsLeaf(CSGTreeNode* node) {return !(node->pLeft && node->pRight);}
+    CSGTree* copy(const CSGTree* thiz);
+
+	/** 
+	if it is a left child, return negative
+	if it is a right child, return positive
+	if it is a root, return 0
+	*/
+	inline int LeftOrRight(CSGTreeNode* node)
+	{
+		assert(node);
+
+		if (!node->Parent) return 0;
+		if (node->Parent->pLeft == node) return -1;
+		if (node->Parent->pRight == node) return 1;
+
+		assert(0);
+		return 0;
+	}
+
 } // namespace CSG
 

@@ -83,6 +83,7 @@
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="CMesh.h" />
     <ClInclude Include="ParseOctree.h" />
+    <ClInclude Include="precompile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

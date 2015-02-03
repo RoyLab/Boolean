@@ -1,4 +1,4 @@
-#pragma warning(disable: 4800)
+#pragma warning(disable: 4800 4996)
 #include "COctree.h"
 #include "BinaryTree.h"
 #include "CSGExprNode.h"
@@ -8,6 +8,10 @@
 #include <list>
 #include <set>
 #include <ctime>
+
+#ifdef _DEBUG
+#include <vld.h>
+#endif
 
 #define CSG_EXPORTS
 #include "Bool.h"
@@ -56,7 +60,7 @@ namespace CSG
 		t0 = clock();
 		StdOutput(ch);
 
-        Octree* pOctree = BuildOctree(arrMesh, nMesh, relationTab);
+        Octree* pOctree = BuildOctree(arrMesh, nMesh);
         if (!pOctree) return NULL;
 
         delete pCSGTree;
@@ -86,7 +90,7 @@ namespace CSG
 	{
 		for (auto &pair: pNode->DiffMeshIndex)
 			pair.Rela = PolyhedralInclusionTest(pNode->BoundingBox.Center(),
-			pOctree, pair.ID, pOctree->pMesh[pair.ID]->bInverse);
+			pOctree, pair.ID);
 
 		if (pNode->Child)
 		{
@@ -100,6 +104,64 @@ namespace CSG
 		RelationTest(pOctree->Root, pOctree);
 	}
 
+	static void TagNode(OctreeNode* root, const CSGTree* last)
+	{
+		const CSGTree* cur(nullptr);
+		bool isMemAllocated = false;
+		Relation curRel = REL_UNKNOWN;
+
+		if (last)
+		{
+			if (root->DiffMeshIndex.size())
+			{
+				// compress with in/out info, create a image to cur
+				isMemAllocated = true;
+				CSGTree* tmpTree = copy(last);
+				for (auto &pair: root->DiffMeshIndex)
+				{
+					curRel = CompressCSGTree(tmpTree, pair.ID, pair.Rela);
+					if (curRel != REL_UNKNOWN)
+						break;
+				}
+				cur = tmpTree;
+			}
+			else cur = last;
+		}
+		
+		if (IsLeaf(root))
+		{
+			if (root->Type == NODE_SIMPLE)
+			{
+				root->pRelationData = new SimpleData(false);
+
+				if (cur && cur->Leaves.size() == 1)
+					*(SimpleData*)(root->pRelationData) = true;
+
+				assert(!(cur && cur->Leaves.size() > 1));
+			}
+			else root->pRelationData = copy(cur);
+		}
+		else
+		{
+			if (curRel != REL_UNKNOWN)
+			{
+				for (uint i = 0; i < 8; i++)
+					TagNode(&root->Child[i], 0);
+			}
+			else
+			{
+				for (uint i = 0; i < 8; i++)
+					TagNode(&root->Child[i], cur);
+			}
+		}
+
+		if (isMemAllocated) delete cur; // !! cur is a const pointer
+	}
+
+	static void TagLeaves(Octree* pOctree, CSGTree* pCSG)
+	{
+		TagNode(pOctree->Root, pCSG);
+	}
 
 	static GS::BaseMesh* BooleanOperation2(GS::CSGExprNode* input, HANDLE stdoutput)
 	{
@@ -110,11 +172,20 @@ namespace CSG
         int nMesh = -1;
 
         CSGTree* pCSGTree = ConvertCSGTree(input, &arrMesh, &nMesh);
-        Octree* pOctree = BuildOctree(arrMesh, nMesh, 0);
+        Octree* pOctree = BuildOctree(arrMesh, nMesh);
 
-		auto pPostive = ConvertToPositiveTree(pCSGTree, pOctree);
+		CSGTree* pPosCSG = ConvertToPositiveTree(pCSGTree);
+		delete pCSGTree;
+
 		RelationTest(pOctree);
+		TagLeaves(pOctree, pPosCSG);
 
+		delete pOctree;
+		delete pPosCSG;
+
+		for (uint i = 0; i < nMesh; i++)
+			delete arrMesh[i];
+		delete [] arrMesh;
 
 		return NULL;
 	}
@@ -128,97 +199,6 @@ namespace CSG
     extern "C" CSG_API GS::BaseMesh* BooleanOperation_MultiThread(GS::CSGExprNode* input)
     {
         return NULL;
-    }
-
-    static inline bool IsLeaf(CSGTreeNode* node) {return !(node->pLeft && node->pRight);}
-
-    static void ParseNode(CSGTreeNode* node, int ***tab, uint num, std::vector<uint> *meshList)
-    {
-        if (!node) return;
-        if (IsLeaf(node))
-        {
-            meshList->push_back(node->pMesh->ID);
-            return;
-        }
-
-        std::vector<uint> leftMeshList, rightMeshList;
-        ParseNode(node->pLeft, tab, num, &leftMeshList);
-        ParseNode(node->pRight, tab, num, &rightMeshList);
-
-        switch (node->Operation)
-        {
-        case OP_UNION:
-            {
-                uint n = leftMeshList.size();
-                uint k = rightMeshList.size();
-
-                for (uint i = 0; i < n; i++)
-                {
-                    for (uint j = 0; j < k; j++)
-                    {
-                        (*tab)[leftMeshList[i]][rightMeshList[j]] ^= (REL_SAME ^ REL_OUTSIDE);
-                        (*tab)[rightMeshList[j]][leftMeshList[i]] ^= REL_OUTSIDE;
-                    }
-                }
-                break;
-            }
-        case OP_INTERSECT:
-            {
-                uint n = leftMeshList.size();
-                uint k = rightMeshList.size();
-
-                for (uint i = 0; i < n; i++)
-                {
-                    for (uint j = 0; j < k; j++)
-                    {
-                        (*tab)[leftMeshList[i]][rightMeshList[j]] ^= REL_SAME ^ REL_INSIDE;
-                        (*tab)[rightMeshList[j]][leftMeshList[i]] ^= REL_INSIDE;
-                    }
-                }
-                break;
-            }
-        case OP_DIFF:
-            {
-                uint n = leftMeshList.size();
-                uint k = rightMeshList.size();
-
-                for (uint i = 0; i < n; i++)
-                {
-                    for (uint j = 0; j < k; j++)
-                    {
-                        (*tab)[leftMeshList[i]][rightMeshList[j]] ^= (REL_OPPOSITE ^ REL_OUTSIDE);
-                        (*tab)[rightMeshList[j]][leftMeshList[i]] ^= REL_INSIDE;
-                        (*tab)[rightMeshList[j]][num]++;
-                    }
-                }
-                break;
-            }
-        default:
-            assert(0);
-            break;
-        }
-
-        // mergeMeshList
-        for (uint i: leftMeshList) meshList->push_back(i);
-        for (uint i: rightMeshList) meshList->push_back(i);
-    }
-
-    static void ParsingCSGTree(CSGTree* pCSGTree, uint num, int ***tab)
-    {
-        assert(pCSGTree);
-
-        int **&table = *tab;
-        table = new int*[num];
-        for (uint i = 0; i < num; i++)
-        {
-            // num rows record the relation
-            // the last one row record information of INVERSE
-            table[i] = new int[num+1];
-            memset(table[i], 0, sizeof(int)*(1+num));
-        }
-
-        std::vector<uint> meshList;
-        ParseNode(pCSGTree->pRoot, tab, num, &meshList);
     }
 
     static void GetLeafNodes(OctreeNode* pNode, std::list<OctreeNode*>& leaves, int NodeType)
@@ -237,7 +217,9 @@ namespace CSG
             GetLeafNodes(&pNode->Child[i], leaves, NodeType);
     }
 
-    static void TriangleIntersectionTest(Octree* pOctree, uint meshId1, uint meshId2, OctreeNode* leaf)
+
+
+  /*  static void TriangleIntersectionTest(Octree* pOctree, uint meshId1, uint meshId2, OctreeNode* leaf)
     {
         auto &triangles1 = leaf->TriangleTable.find(meshId1);
         auto &triangles2 = leaf->TriangleTable.find(meshId2);
@@ -482,6 +464,6 @@ namespace CSG
         for (uint i =0; i < pOctree->nMesh; i++)
             for (uint index: unTouchedTriangles[i])
                 AddVertices(pOctree, i, index, vertex);
-    }
+    }*/
 }
 

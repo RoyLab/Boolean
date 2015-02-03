@@ -5,6 +5,8 @@
 #include <assert.h>
 #include "typedefs.h"
 #include "Plane.h"
+#include <set>
+#include "BinaryTree.h"
 
 using namespace GS;
 
@@ -12,8 +14,6 @@ using namespace GS;
 
 namespace CSG
 {
-    typedef unsigned uint;
-
     template<typename P>
     bool TriangleAABBIntersectTest(const vec3<P>& v0, const vec3<P>& v1, const vec3<P>& v2, const AABB& bbox)
     {
@@ -185,14 +185,13 @@ namespace CSG
     }
 
 
-    Octree* BuildOctree(CSGMesh** meshList, unsigned num, int** reltab)
+    Octree* BuildOctree(CSGMesh** meshList, uint num)
     {
         if (!num) return NULL;
 
         Octree* pOctree = new Octree;
         pOctree->pMesh = meshList;
         pOctree->nMesh = num;
-        pOctree->ppRelationTable = reltab;
 
         OctreeNode*& root = pOctree->Root;
         root = new OctreeNode;
@@ -273,7 +272,7 @@ namespace CSG
         double dist =  dot(normal, (pos-v0)); 
         if (dist > EPSF )
             return true;
-        return false ; 
+        return false; 
     }
 
     struct RayCastInfo
@@ -471,6 +470,41 @@ namespace CSG
         default:    return REL_OUTSIDE;
         }
     }
+
+	OctreeNode::OctreeNode():
+		Child(0), Parent(0), TriangleCount(0)
+		, pRelationData(nullptr)
+	{
+	}
+
+	OctreeNode::~OctreeNode()
+	{
+		if (pRelationData)
+		{
+			if (Type == NODE_SIMPLE)
+				delete (SimpleData*)pRelationData;
+			else delete (ComplexData*)pRelationData;
+		}
+
+		if (Child)
+		{
+			delete [] Child;
+			Child = nullptr;
+		}
+
+	}
+
+	Octree::Octree():
+		Root(0), pMesh(0), nMesh(0)
+	{
+
+	}
+
+	Octree::~Octree()
+	{
+		SAFE_RELEASE(Root);
+	}
+
 
 } // namespace CSG
 

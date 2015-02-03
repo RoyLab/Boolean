@@ -50,5 +50,8 @@
     <ClInclude Include="ParseOctree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="precompile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
