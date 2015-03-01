@@ -171,13 +171,25 @@ namespace CSG
         CSGMesh** arrMesh = NULL;
         int nMesh = -1;
 
+		StdOutput("Start:");
+        t0 = clock();
+
         CSGTree* pCSGTree = ConvertCSGTree(input, &arrMesh, &nMesh);
         Octree* pOctree = BuildOctree(arrMesh, nMesh);
 
 		CSGTree* pPosCSG = ConvertToPositiveTree(pCSGTree);
 		delete pCSGTree;
 
+        sprintf(ch, "RelationTest:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
+
 		RelationTest(pOctree);
+
+        sprintf(ch, "/RelationTest:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
+
 		TagLeaves(pOctree, pPosCSG);
 
 		delete pOctree;
@@ -186,6 +198,9 @@ namespace CSG
 		for (uint i = 0; i < nMesh; i++)
 			delete arrMesh[i];
 		delete [] arrMesh;
+
+		sprintf(ch, "End:%d\0", clock()-t0);
+		StdOutput(ch);
 
 		return NULL;
 	}

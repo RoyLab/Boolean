@@ -10,7 +10,7 @@
 
 using namespace GS;
 
-#define MAX_TRIANGLE_COUNT 17
+#define MAX_TRIANGLE_COUNT 25
 
 namespace CSG
 {
