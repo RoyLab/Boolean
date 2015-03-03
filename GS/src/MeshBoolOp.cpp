@@ -22,18 +22,26 @@ BoolOp* MeshBoolOp::GetInstance()
 
 BaseMesh*  MeshBoolOp::ComputeBoolean(BaseMesh* mesh1,  BaseMesh* mesh2, BOOL_OP op) 
 {
+	CSGExprNode* pNode(nullptr);
     switch (op)
     {
         case eUnion:
-            return  DoCompute(CSGExprNode::Union(mesh1, mesh2));
+            pNode = CSGExprNode::Union(mesh1, mesh2);
+			break;
         case eIntersect:
-            return  DoCompute(CSGExprNode::Intersect(mesh1, mesh2));
+            pNode = CSGExprNode::Intersect(mesh1, mesh2);
+			break;
         case eDiff:
-            return DoCompute(CSGExprNode::Diff(mesh1, mesh2));
+            pNode = CSGExprNode::Diff(mesh1, mesh2);
+			break;
         default : 
             assert(0);
             return NULL;
     }
+
+	BaseMesh* res = DoCompute(pNode);
+	delete pNode;
+	return res;
 }
 
 
@@ -53,7 +61,9 @@ BaseMesh*  MeshBoolOp::Evalute(std::vector<BaseMesh*>& meshList, std::string& po
 {
     //construct CSGExproNode 
     CSGExprNode* pNode = EvalutePostfix(meshList, postfix);
-    return DoCompute(pNode);
+    BaseMesh* res = DoCompute(pNode);
+	delete pNode;
+	return res;
 }
 
 

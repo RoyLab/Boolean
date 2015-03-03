@@ -23,10 +23,14 @@ namespace CSG
 
 	struct MPMesh:public MPMeshKernel
 	{
-		AABBmp BBox;
-		int  ID;
+		MPMesh(GS::BaseMesh* pMesh);
+        ~MPMesh(void);
 
+		int  ID;
 		bool bInverse;
+		AABBmp BBox;
+
+        GS::BaseMesh* pOrigin;
 	};
 
 

@@ -1,40 +1,24 @@
 #include "precompile.h"
-#pragma warning(disable: 4800 4996)
+#include "MPMesh.h"
+#define CSG_EXPORTS
+#include "Bool.h"
+#include <ctime>
+#include <list>
 #include "COctree.h"
 #include "BinaryTree.h"
-#include "CSGExprNode.h"
-#include "BaseMesh.h"
-#include "CMesh.h"
-#include "topology.h"
-#include <list>
-#include <set>
-#include <ctime>
 
-#ifdef min
-#undef min
-#endif
-
-#ifdef max
-#undef max
-#endif
-
-#include "MPMesh.h"
 
 #ifdef _DEBUG
 #include <vld.h>
 #endif
 
-#define CSG_EXPORTS
-#include "Bool.h"
+#pragma warning(disable: 4800 4996)
 
-using GS::double3;
 
 namespace CSG
 {
 	HANDLE _output;
 	clock_t t0;
-    typedef unsigned uint;
-
 
 	void StdOutput(char* str)
 	{
@@ -43,7 +27,7 @@ namespace CSG
 		WriteConsole(_output, "\n", 1, 0, 0);
 	}
 
-	static void RelationTest(OctreeNode* pNode, Octree* pOctree)
+	/*static void RelationTest(OctreeNode* pNode, Octree* pOctree)
 	{
 		for (auto &pair: pNode->DiffMeshIndex)
 			pair.Rela = PolyhedralInclusionTest(pNode->BoundingBox.Center(),
@@ -118,8 +102,92 @@ namespace CSG
 	static void TagLeaves(Octree* pOctree, CSGTree* pCSG)
 	{
 		TagNode(pOctree->Root, pCSG);
+	}*/
+
+	static void IntersectionTest()
+	{
+
 	}
 
+/*-    static void TriangleIntersectionTest(Octree* pOctree, uint meshId1, uint meshId2, OctreeNode* leaf)
+-    {
+-        auto &triangles1 = leaf->TriangleTable.find(meshId1);
+-        auto &triangles2 = leaf->TriangleTable.find(meshId2);
+-
+-        if (triangles1 == leaf->TriangleTable.end() || 
+-            triangles2 == leaf->TriangleTable.end()) return;
+-
+-        auto mesh1 = pOctree->pMesh[meshId1];
+-        auto mesh2 = pOctree->pMesh[meshId2];
+-        
+-        for (auto i: triangles1->second)
+-        {
+-            auto &carveInfo = pOctree->CarvedTriangleInfo[meshId1][i];
+-            carveInfo.ToBeTest.insert(leaf->ValidTable.begin(), leaf->ValidTable.end());
+-            carveInfo.ToBeTest.erase(meshId1);
+-
+-            if (!carveInfo.Surface)
+-            {
+-                std::vector<int> triIds(1);
+-                triIds[0] = (int)i;
+-                carveInfo.Surface = new GS::Surface<double>(mesh1->pOrigin, triIds);
+-                carveInfo.Surface->GenerateOuterLineByTri();
+-                carveInfo.Surface->GenerateAABB();
+-            }
+-        }
+-
+-        for (auto j: triangles2->second)
+-        {
+-            auto &carveInfo = pOctree->CarvedTriangleInfo[meshId2][j];
+-            carveInfo.ToBeTest.insert(leaf->ValidTable.begin(), leaf->ValidTable.end());
+-            carveInfo.ToBeTest.erase(meshId2);
+-
+-            if (!carveInfo.Surface)
+-            {
+-                std::vector<int> triIds(1);
+-                triIds[0] = (int)j;
+-                carveInfo.Surface = new GS::Surface<double>(mesh2->pOrigin, triIds);
+-                carveInfo.Surface->GenerateOuterLineByTri();
+-                carveInfo.Surface->GenerateAABB();
+-            }
+-        }
+-
+-
+-        for (auto i: triangles1->second)
+-        {
+-            auto &triInfo1 = pOctree->CarvedTriangleInfo[meshId1][i];
+-            for (auto j: triangles2->second)
+-            {
+-                auto &tri1 = mesh1->mTriangle[i];
+-                auto &tri2 = mesh2->mTriangle[j];
+-
+-                double3 &p0 = mesh1->mVertex[tri1.VertexIndex[0]];
+-                double3 &p1 = mesh1->mVertex[tri1.VertexIndex[1]];
+-                double3 &p2 = mesh1->mVertex[tri1.VertexIndex[2]];
+-
+-                double3 &v0 = mesh2->mVertex[tri2.VertexIndex[0]];
+-                double3 &v1 = mesh2->mVertex[tri2.VertexIndex[1]];
+-                double3 &v2 = mesh2->mVertex[tri2.VertexIndex[2]];
+-
+-                std::vector<GS::Seg3D<double>> intersects;
+-                bool IsIntersected = 
+-                    GS::TriangleInterTriangle(p0, p1, p2, tri1.Normal, 
+-                    v0, v1, v2, tri2.Normal, intersects);
+-
+-                if (IsIntersected)
+-                {
+-                    auto &triInfo2 = pOctree->CarvedTriangleInfo[meshId2][j];
+-                    for (const auto &seg: intersects)
+-                    {
+-                        triInfo1.Surface->AddConstraint(seg.start, seg.end, mesh1->pOrigin->GetID());
+-                        triInfo2.Surface->AddConstraint(seg.start, seg.end, mesh2->pOrigin->GetID());
+-                    }
+-                }
+-            }
+-        }
+-
+-    }
+-*/
 	static GS::BaseMesh* BooleanOperation2(GS::CSGExprNode* input, HANDLE stdoutput)
 	{
 		char ch[32];
@@ -130,15 +198,16 @@ namespace CSG
 
 		StdOutput("Start:");
         t0 = clock();
+
         CSGTree* pCSGTree = ConvertCSGTree(input, &arrMesh, &nMesh);
+		CSGTree* pPosCSG = ConvertToPositiveTree(pCSGTree);
+		delete pCSGTree;
+
         Octree* pOctree = BuildOctree(arrMesh, nMesh);
 
-		//CSGTree* pPosCSG = ConvertToPositiveTree(pCSGTree);
-		//delete pCSGTree;
-
-  //      sprintf(ch, "RelationTest:%d\0", clock()-t0);
-		//t0 = clock();
-		//StdOutput(ch);
+        sprintf(ch, "RelationTest:%d\0", clock()-t0);
+		t0 = clock();
+		StdOutput(ch);
 
 		//RelationTest(pOctree);
 
@@ -148,15 +217,15 @@ namespace CSG
 
 		//TagLeaves(pOctree, pPosCSG);
 
-		//delete pOctree;
-		//delete pPosCSG;
+		delete pOctree;
+		delete pPosCSG;
 
-		//for (uint i = 0; i < nMesh; i++)
-		//	delete arrMesh[i];
-		//delete [] arrMesh;
+		for (int i = 0; i < nMesh; i++)
+			delete arrMesh[i];
+		delete [] arrMesh;
 
-		//sprintf(ch, "End:%d\0", clock()-t0);
-		//StdOutput(ch);
+		sprintf(ch, "End:%d\0", clock()-t0);
+		StdOutput(ch);
 
 		return NULL;
 	}
@@ -165,7 +234,6 @@ namespace CSG
     extern "C" CSG_API GS::BaseMesh* BooleanOperation(GS::CSGExprNode* input, HANDLE stdoutput)
     {
 		return BooleanOperation2(input, stdoutput);
-		return NULL;
     }
 
     extern "C" CSG_API GS::BaseMesh* BooleanOperation_MultiThread(GS::CSGExprNode* input)

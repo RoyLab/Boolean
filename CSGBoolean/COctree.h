@@ -48,7 +48,7 @@ namespace CSG
         OctreeNode *Child, *Parent;
 
         std::vector<DiffMeshInfo> DiffMeshIndex;
-        std::map<uint, std::vector<uint>>  TriangleTable;
+        std::map<uint, std::vector<int>>  TriangleTable;
         uint TriangleCount;
 
 		void *pRelationData;

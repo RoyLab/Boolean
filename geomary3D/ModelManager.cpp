@@ -166,7 +166,6 @@ void CModelManager::EvaluateBoolExpression(const std::string& expression)
     GS::BaseMesh* pResult = pBoolOp->Execute(mpMeshList,expression);
 	if (pResult )
         mpResultMeshList.push_back(pResult);
-	
 }
 
 

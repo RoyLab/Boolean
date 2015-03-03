@@ -9,9 +9,21 @@ namespace CSG
 		return OpenMesh::Vec3d(vec.x, vec.y, vec.z);
 	}
 	
+
+	MPMesh::MPMesh(GS::BaseMesh* pMesh):
+        ID(-1), pOrigin(pMesh), bInverse(false)
+    {
+		request_face_normals();
+    }
+
+    MPMesh::~MPMesh(void)
+    {
+		release_face_normals();
+    }
+
 	MPMesh* ConvertToMPMesh(GS::BaseMesh* pMesh)
 	{
-		MPMesh *res = new MPMesh;
+		MPMesh *res = new MPMesh(pMesh);
 
         int n = (int)pMesh->VertexCount();
         res->BBox.Clear();
@@ -30,8 +42,10 @@ namespace CSG
 			face_vhandles[0] = res->vertex_handle(index.VertexId[0]);
 			face_vhandles[1] = res->vertex_handle(index.VertexId[1]);
 			face_vhandles[2] = res->vertex_handle(index.VertexId[2]);
-            res->add_face(face_vhandles);
+            auto hwd = res->add_face(face_vhandles);
         }
+
+		res->update_normals();
 
 		return res;
 		return NULL;

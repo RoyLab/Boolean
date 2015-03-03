@@ -3,38 +3,44 @@
 #include "MPMesh.h"
 #include "isect.h"
 
-#define MAX_TRIANGLE_COUNT 25
-
-using OpenMesh::Vec3d;
 
 namespace CSG
 {
- 
-    static void BuildOctree(OctreeNode* root, Octree* pOctree)
+	static const int MAX_TRIANGLE_COUNT = 25;
+	static const int MAX_LEVEL = 8;
+
+    static void BuildOctree(OctreeNode* root, Octree* pOctree, int level)
     {
         assert(root && pOctree);
 
-        if (root->TriangleTable.size() < 2)
-            root->Type = NODE_SIMPLE;
-        else if (root->TriangleCount > MAX_TRIANGLE_COUNT)
+        if (root->TriangleCount <= MAX_TRIANGLE_COUNT || level > MAX_LEVEL)
+		{
+			if (root->TriangleTable.size() > 1)
+				root->Type = NODE_COMPOUND;
+			else root->Type = NODE_SIMPLE;
+		}
+        else
         {
-            root->Type = NODE_MIDSIDE;
+			if (root->TriangleTable.size() > 1)
+				root->Type = NODE_MIDSIDE;
+			else root->Type = NODE_SIMPLE;
+
             root->Child = new OctreeNode[8];
 
-            double3 minOffset, maxOffset;
-            AABB &bbox = root->BoundingBox;
-            double3 step = bbox.Diagonal()*0.5;
+            Vec3d minOffset, maxOffset;
+            AABBmp &bbox = root->BoundingBox;
+            Vec3d step = bbox.Diagonal()*0.5;
     
             for (uint i = 0; i < 8 ; i++)
             {
                 auto pChild = &root->Child[i];
 
-                maxOffset.z = i & 1 ?  0 : -step.z; 
-                maxOffset.y = i & 2 ?  0 : -step.y;
-                maxOffset.x = i & 4 ?  0 : -step.x;
-                minOffset.z = i & 1 ?  step.z : 0; 
-                minOffset.y = i & 2 ?  step.y : 0;
-                minOffset.x = i & 4 ?  step.x : 0;
+                maxOffset[2] = i & 1 ?  0 : -step[2]; 
+                maxOffset[1] = i & 2 ?  0 : -step[1];
+                maxOffset[0] = i & 4 ?  0 : -step[0];
+                minOffset[2] = i & 1 ?  step[2] : 0; 
+                minOffset[1] = i & 2 ?  step[1] : 0;
+                minOffset[0] = i & 4 ?  step[0] : 0;
                 pChild->BoundingBox.Set(bbox.Min() + minOffset, 
                     bbox.Max()+ maxOffset);
 
@@ -47,18 +53,22 @@ namespace CSG
                 auto pMesh = pOctree->pMesh[triTab.first];
 
                 const uint tn = triangles.size();
+				int count;
+				MPMesh::FaceHandle fhandle;
+				MPMesh::FaceVertexIter fvItr;
                 for (uint i = 0; i < tn; i++)
                 {
                     // intersection test, can be optimized!!!
-                    auto &tri = pMesh->mTriangle[triangles[i]];
-                    int count = 0;
+					fhandle = pMesh->face_handle(triangles[i]);
+                    count = 0;
 
                     for (uint j = 0; j < 8; j++)
                     {
                         count = 0;
-                        auto &v0 = pMesh->mVertex[tri.VertexIndex[0]];
-                        auto &v1 = pMesh->mVertex[tri.VertexIndex[1]];
-                        auto &v2 = pMesh->mVertex[tri.VertexIndex[2]];
+						fvItr = pMesh->fv_iter(fhandle);
+                        auto &v0 = pMesh->point(*fvItr);	fvItr++;
+                        auto &v1 = pMesh->point(*fvItr);	fvItr++;
+                        auto &v2 = pMesh->point(*fvItr);
                         auto &aabb = root->Child[j].BoundingBox;
 
                         if (aabb.IsInBox_LORC(v0)) count++;
@@ -88,10 +98,9 @@ namespace CSG
                         root->Child[i].DiffMeshIndex.emplace_back(itr.first);
                 }
 
-                BuildOctree(root->Child+i, pOctree);
+                BuildOctree(root->Child+i, pOctree, level+1);
             }
         }
-        else root->Type = NODE_COMPOUND;
     }
 
 
@@ -107,18 +116,16 @@ namespace CSG
         root = new OctreeNode;
         
         root->BoundingBox.Clear();
-		uint j;
 		MPMesh *pMesh;
         for (uint i = 0; i < num; i++)
         {
 			pMesh = meshList[i];
             root->BoundingBox.IncludeBox(pMesh->BBox);
 
-			j = 0;
             for (auto fItr = pMesh->faces_begin(); fItr != pMesh->faces_end(); fItr++)
             {
                 root->TriangleCount++;
-                root->TriangleTable[i].push_back(j++);
+                root->TriangleTable[i].push_back(fItr->idx());
             }
         }
 
@@ -129,10 +136,10 @@ namespace CSG
         }
 
         // make sure every triangle is inside the box.
-        root->BoundingBox.Enlarge(0.1);
+        root->BoundingBox.Enlarge(0.001);
 
         // start recursion
-        BuildOctree(root, pOctree);
+        BuildOctree(root, pOctree, 0);
 
         return pOctree;
     }

@@ -99,7 +99,7 @@ namespace CSG
         MPMesh**& pMesh = *arrMesh;
         *nMesh = meshList.size();
         pMesh = new MPMesh*[*nMesh];
-        memcpy(pMesh, meshList.data(), sizeof(CSGMesh*)*(*nMesh));
+        memcpy(pMesh, meshList.data(), sizeof(MPMesh*)*(*nMesh));
         return pRes;
     }
 

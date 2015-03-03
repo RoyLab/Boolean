@@ -92,8 +92,6 @@ BaseMesh* BoolOp::Intersect (BaseMesh* mesh1,  BaseMesh* mesh2)
 	if (result != NULL)
 	{
 		result->GenID();
-	//	result->GenSurface();
-	//	result->GenAABB(true);
 	}
 	return result ; 
  
@@ -105,10 +103,10 @@ BaseMesh* BoolOp::Execute(std::vector<BaseMesh*>& meshList, const std::string& e
 {
     if (meshList.size() == 0)
         return NULL;
+
     // Parser expression 
     std::string postfix = InfixToPostfix(expression);
     return Evalute(meshList, postfix);
-    
 }
 
 
