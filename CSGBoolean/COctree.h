@@ -1,15 +1,12 @@
 #pragma once
-#include "precompile.h"
-#include "AABB.h"
-#include "Box3.h"
 #include <vector>
-#include "Intersect.h"
-#include "Surface.h"
 #include <map>
+#include "AABBmp.h"
 
 namespace CSG
 {
 	struct CSGTree;
+    struct MPMesh;
 
     enum NodeType
     {
@@ -28,23 +25,24 @@ namespace CSG
         REL_OPPOSITE = 8
     };
 
-    struct CSGMesh;
-
     struct DiffMeshInfo
     {
         uint ID;
         Relation Rela;
 
-        DiffMeshInfo(uint i, Relation rel = REL_UNKNOWN):
-			ID(i), Rela(rel){}
+        DiffMeshInfo(
+			uint i, 
+			Relation rel = REL_UNKNOWN
+			): ID(i), Rela(rel)
+		{}
     };
 
-	typedef bool SimpleData;
-	typedef CSGTree ComplexData;
+	//typedef bool SimpleData;
+	//typedef CSGTree ComplexData;
 
     struct OctreeNode
     {
-        AABB BoundingBox;
+        AABBmp BoundingBox;
         NodeType Type;
 
         OctreeNode *Child, *Parent;
@@ -61,28 +59,28 @@ namespace CSG
 
 
 
-    struct CarvedInfo
-    {
-        GS::Surface<double>* Surface;
-        GS::ListOfvertices Triangles;
+    //struct CarvedInfo
+    //{
+    //    GS::Surface<double>* Surface;
+    //    GS::ListOfvertices Triangles;
 
-        CarvedInfo():Surface(0){}
-    };
+    //    CarvedInfo():Surface(0){}
+    //};
 
-    typedef std::vector<std::map<uint, CarvedInfo>> TriangleRecord; // may be better as a vector
+    //typedef std::vector<std::map<uint, CarvedInfo>> TriangleRecord; // may be better as a vector
 
     struct Octree
     {
         OctreeNode *Root;
         
-        CSGMesh**   pMesh;
+        MPMesh**   pMesh;
         uint			nMesh;
 
 		Octree();
 		~Octree();
     };
 
-    Octree* BuildOctree(CSGMesh** meshList, uint nMesh);
+    Octree* BuildOctree(MPMesh** meshList, uint nMesh);
     Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree, uint meshId, bool = false);
 
     inline bool IsLeaf(OctreeNode* node) {return !node->Child;}

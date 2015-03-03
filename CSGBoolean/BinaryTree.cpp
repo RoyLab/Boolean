@@ -1,11 +1,23 @@
-﻿#include "BinaryTree.h"
+﻿#include "precompile.h"
+#include "BinaryTree.h"
 #include "CSGExprNode.h"
-#include "CMesh.h"
 #include <cassert>
 #include <climits>
 
 // TO-DO: we need method called findLeaf(uint Id)
 // to instead GetLeafList;
+
+
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
+
+
+#include "MPMesh.h"
 
 namespace CSG
 {
@@ -33,7 +45,7 @@ namespace CSG
 	}
 
 
-    static void ConvertCSGTreeNode(GS::CSGExprNode* input, CSGTreeNode** pRoot, std::vector<CSGMesh*>& meshList)
+    static void ConvertCSGTreeNode(GS::CSGExprNode* input, CSGTreeNode** pRoot, std::vector<MPMesh*>& meshList)
     {
         if (!input) return;
 
@@ -43,7 +55,7 @@ namespace CSG
         GS::BaseMesh* pBaseMesh = input->GetMesh();
         if (pBaseMesh)
         {
-            root->pMesh = new CSGMesh(pBaseMesh);
+            root->pMesh = ConvertToMPMesh(pBaseMesh);
             root->pMesh->ID = meshList.size();
 			root->Type = TYPE_LEAF;
             meshList.emplace_back(root->pMesh);
@@ -74,19 +86,19 @@ namespace CSG
     }
 
 
-    CSGTree* ConvertCSGTree(GS::CSGExprNode* root, CSGMesh*** arrMesh, int *nMesh) // convert nodes.
+    CSGTree* ConvertCSGTree(GS::CSGExprNode* root, MPMesh*** arrMesh, int *nMesh) // convert nodes.
     {
         if (!root) return NULL;
 
         CSGTree* pRes = new CSGTree;
         pRes->pRoot = NULL;
-        std::vector<CSGMesh*> meshList;
+        std::vector<MPMesh*> meshList;
 
         ConvertCSGTreeNode(root, &pRes->pRoot, meshList);
 
-        CSGMesh**& pMesh = *arrMesh;
+        MPMesh**& pMesh = *arrMesh;
         *nMesh = meshList.size();
-        pMesh = new CSGMesh*[*nMesh];
+        pMesh = new MPMesh*[*nMesh];
         memcpy(pMesh, meshList.data(), sizeof(CSGMesh*)*(*nMesh));
         return pRes;
     }

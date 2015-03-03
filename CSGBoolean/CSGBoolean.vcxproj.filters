@@ -27,7 +27,10 @@
     <ClCompile Include="BinaryTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ParseOctree.cpp">
+    <ClCompile Include="MPMesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="isect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -47,10 +50,16 @@
     <ClInclude Include="BinaryTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ParseOctree.h">
+    <ClInclude Include="precompile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="precompile.h">
+    <ClInclude Include="isect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MPMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="AABBmp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

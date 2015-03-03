@@ -1,5 +1,4 @@
 #pragma once
-#include "precompile.h"
 #include "COctree.h"
 #include <map>
 
@@ -12,7 +11,7 @@ namespace GS
 namespace CSG
 {
     struct Octree;
-    struct CSGMesh;
+    struct MPMesh;
 
     enum BiNodeType
     {
@@ -28,7 +27,7 @@ namespace CSG
         BiNodeType Type;
         CSGTreeNode *pLeft, *pRight, *Parent;
 
-        CSGMesh* pMesh;
+        MPMesh* pMesh;
 		bool	 bInverse;
 
 		CSGTreeNode();
@@ -44,7 +43,7 @@ namespace CSG
 		~CSGTree();
     };
 
-    CSGTree* ConvertCSGTree(GS::CSGExprNode* root, CSGMesh*** arrMesh, int *nMes); // convert nodes.
+    CSGTree* ConvertCSGTree(GS::CSGExprNode* root, MPMesh*** arrMesh, int *nMes); // convert nodes.
 	CSGTree* ConvertToPositiveTree(const CSGTree* tree);
 	Relation CompressCSGTree(CSGTree* tree, uint Id, Relation rel);
 
