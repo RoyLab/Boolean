@@ -3,6 +3,7 @@
 #include <Fade_2D.h>
 #include "MPMesh.h"
 #include "BinaryTree.h"
+#include <set>
 
 namespace CSG
 {
@@ -10,21 +11,21 @@ namespace CSG
 	struct ISectTriangle;
 	struct ISVertexInfo;
 
-	typedef typename std::list<ISectTriangle>::iterator ISectTriItr;
-	typedef typename std::list<Vec3d>::iterator			VertexItr;
-	typedef typename std::list<Vec3d>::const_iterator	cVertexItr;
-	typedef typename std::list<ISVertexInfo>::iterator	ISectVItr;
+	typedef std::list<ISectTriangle>::iterator ISectTriItr;
+	typedef std::list<Vec3d>::iterator			VertexItr;
+	typedef std::list<Vec3d>::const_iterator	cVertexItr;
+	typedef std::list<ISVertexInfo>::iterator	ISectVItr;
 
 	enum VertexPos 
 	{
-		NONE, 
+		NONE =   -1, 
 		EDGE_0 = 0x01, 
 		EDGE_1 = 0x02, 
 		EDGE_2 = 0x04, 
 		VER_0  = 0x08, 
 		VER_1  = 0x10, 
 		VER_2  = 0x20, 
-		INNER
+		INNER  = 0x00,
 	};
 
 	struct ISVertexInfo
@@ -64,6 +65,7 @@ namespace CSG
 		MPMesh::FaceHandle	face;
 
 		int mainIndex;
+		std::set<int> relationTestId;
 
 		std::list<ISVertexInfo> vertices;
 		std::list<ISCutSegInfo>	segs;

@@ -44,7 +44,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(OMP_DIR)\include;C:\Program Files %28x86%29\tbb42\include;$(BOOST_INCLUDEDIR);$(CGAL_DIR)\auxiliary\gmp\include;$(CGAL_DIR)\include\;$(DXSDK_DIR)\include;C:\work\geomary3D\GS\inc;..\GS\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\fade2d_v1.19\fadeRelease\include_fade2d;$(OMP_DIR)\include;C:\Program Files %28x86%29\tbb42\include;$(BOOST_INCLUDEDIR);$(CGAL_DIR)\auxiliary\gmp\include;$(CGAL_DIR)\include\;$(DXSDK_DIR)\include;C:\work\geomary3D\GS\inc;..\GS\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -60,7 +60,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <AdditionalIncludeDirectories>$(OMP_DIR)\include;C:\Program Files %28x86%29\tbb42\include;$(BOOST_INCLUDEDIR);$(CGAL_DIR)\auxiliary\gmp\include;$(CGAL_DIR)\include\;$(DXSDK_DIR)\include;C:\work\geomary3D\GS\inc;..\GS\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\fade2d_v1.19\fadeRelease\include_fade2d;$(OMP_DIR)\include;C:\Program Files %28x86%29\tbb42\include;$(BOOST_INCLUDEDIR);$(CGAL_DIR)\auxiliary\gmp\include;$(CGAL_DIR)\include\;$(DXSDK_DIR)\include;C:\work\geomary3D\GS\inc;..\GS\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>

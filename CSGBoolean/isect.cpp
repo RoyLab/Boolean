@@ -1,12 +1,30 @@
 #include "precompile.h"
 #include "isect.h"
-
 #include <vector>
 #include "Box3.h"
 #include "Intersect.h"
+#include "IsectTriangle.h"
 
-using GS::max;
-using GS::min;
+#ifdef FINDMINMAX
+#undef FINDMINMAX
+#endif
+
+#define FINDMINMAX(x0,x1,x2,min,max) \
+    min = max = x0; \
+    if(x1<min) min=x1;\
+    if(x1>max) max=x1;\
+    if(x2<min) min=x2;\
+    if(x2>max) max=x2;
+
+#ifndef min
+#define min(i, j) (((i)<(j))?(i):(j))
+#endif
+
+#ifndef max
+#define max(i, j) (((i)>(j))?(i):(j))
+#endif
+
+#define EPSF_2 (EPSF*EPSF)
 
 namespace CSG
 {
@@ -80,13 +98,13 @@ namespace CSG
              return false ; 
 
         //   /* test in X-direction */
-       double min, max ; 
-       FINDMINMAX(v00[0], v10[0], v20[0] ,min,max);
-       if(min> e[0] || max<-e[0] ) return false;
-       FINDMINMAX(v00[1], v10[1], v20[1] ,min,max);
-       if(min> e[1]  || max<-e[1] ) return false; 
-       FINDMINMAX(v00[2], v10[2], v20[2] ,min,max);
-       if(min> e[2] || max<-e[2] ) return false;
+       double minVal, maxVal ; 
+       FINDMINMAX(v00[0], v10[0], v20[0] ,minVal,maxVal);
+       if(minVal> e[0] || maxVal<-e[0] ) return false;
+       FINDMINMAX(v00[1], v10[1], v20[1] ,minVal,maxVal);
+       if(minVal> e[1]  || maxVal<-e[1] ) return false; 
+       FINDMINMAX(v00[2], v10[2], v20[2] ,minVal,maxVal);
+       if(minVal> e[2] || maxVal<-e[2] ) return false;
        //test 
         Vec3d normal = cross ((v10- v00), (v20 - v10));
         double       d = - dot (normal, v0);
@@ -96,94 +114,219 @@ namespace CSG
         return  (fabs(s) <= (r1)); 
     }
 
-	//bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 
-	//						 const Vec3d& u0, const Vec3d& u1, const Vec3d& u2, const Vec3d& nu,
-	//						 std::vector<GS::Seg3D<double>>& intersects)
-	//{
-	//	/* compute plane equation of triangle(p0,p1,p2) */
-	//	 double  d1=-dot(nv, v0);
-	//	/* plane equation 1: N1.X+d1=0 */
-	//	/* put U0,U1,U2 into plane equation 1 to compute signed distances to the plane*/
-	//	double du[3];
-	//	du[0] = dot(nv,u0)+d1;
-	//	du[1] = dot(nv,u1)+d1;
-	//	du[2] = dot(nv,u2)+d1;
-	//	int sdu[3];
-	//	NormalDistToSign(du, sdu);
-	//	if(sdu[0] == 0 && sdu[1] == 0 && sdu [2] ==0)
-	//		return false;
 
-	//	if ((sdu[0] == sdu[1]) && (sdu[1] == sdu[2]))
-	//		return false ; 
+	static inline void isect2(const Vec3d& v0, const Vec3d& v1,  const Vec3d& v2, 
+							  int index, const double* d, double* isect0, double* isect1, Vec3d& isectpoint0,   Vec3d& isectpoint1)
+						  
+	{
+		  double tmp = d[0] / (d[0] - d[1]);
+		  *isect0  = v0[index] + (v1[index] - v0[index])*tmp;
+		  Vec3d diff = (v1-v0) * tmp;
+		  isectpoint0 = v0 + diff;
 
-	//	double d2=-dot(nu, u0);
-	//	double dv[3];
-	//	dv[0] =dot(nu,v0)+d2;
-	//	dv[1] = dot(nu,v1)+d2;
-	//	dv[2] = dot(nu,v2)+d2;
-	//	int sdv[3];
-	//	NormalDistToSign(dv, sdv);
-	//	if ((sdv[0] == sdv[1]) && (sdv[1] == sdv[2]))
-	//		return false ; 
-	//	/* compute direction of intersection line */
-	//	Vec3d LineDir = cross(nv, nu);
+		  tmp = d[0] / (d[0] - d[2]);
+		  *isect1 = v0[index] + (v2[index] - v0[index])*tmp;
+		  diff =(v2-v0) * tmp;
+		  isectpoint1 = v0 + diff;
+	}
 
-	//	/* compute and index to the largest component of D */
-	//	double max=fabs(LineDir.x);
-	//	int index=0;
-	//	double b=fabs(LineDir.y);
-	//	double c=fabs(LineDir.z);
-	//	if(b>max) max=b,index=1;
-	//	if(c>max) max=c,index=2;
+	static inline void isect(const Vec3d& v0, const Vec3d& v1, const double vv0, const double vv1, double d0, double d1,
+							   double* isect0, Vec3d& isectpoint0)
+						  
+	{
+		  double tmp = d0 / (d0 - d1);
+		  *isect0  = vv0 + (vv1 - vv0)*tmp;
+		  Vec3d diff = (v1-v0) * tmp;
+		  isectpoint0 = v0 + diff;
+	}
 
-	//	/* this is the simplified projection onto L*/
-	//	double vp0=v0[index];
-	//	double vp1=v1[index];
-	//	double vp2=v2[index];
+	static inline int compute_intervals_isectline(const Vec3d& v0, const Vec3d& v1,  const Vec3d& v2, 
+												  int index, const double* d, const int* sd, 
+												  double* isect0, double* isect1, Vec3d& isectpoint0, Vec3d& isectpoint1,
+												  int& isectType0, int& isectType1)
+	{
+		if (sd[0] == 0)
+		{
+			if (sd[1] == 0)
+			{
+#ifdef _DEBUG
+				if (sd[2] == 0) assert(0);
+#endif
+				*isect0 = v0[index];
+				*isect1 = v1[index];
+				isectpoint0 = v0;
+				isectpoint1 = v1;
+				isectType0 = VER_0;
+				isectType1 = VER_1;
 
-	//	double up0=u0[index];
-	//	double up1=u1[index];
-	//	double up2=u2[index];
+			}
+			else if (sd[2] == 0)
+			{
+#ifdef _DEBUG
+				if (sd[1] == 0) assert(0);
+#endif
+				*isect0 = v0[index];
+				*isect1 = v2[index];
+				isectpoint0 = v0;
+				isectpoint1 = v2;
+				isectType0 = VER_0;
+				isectType1 = VER_2;
+			}
+			else if (sd[1]*sd[2] > 0) return -1; // point intersection
+			else
+			{
+				*isect0 = v0[index];
+				isectpoint0 = v0;
+				isectType0 = VER_0;
 
-	//	/* compute interval for triangle 1 */
-	//	double isect1[2];   
-	//	Vec3d  isectpointA1,isectpointA2;
-	//	bool isCoplanar=compute_intervals_isectline(v0,v1,v2,vp0,vp1,vp2,dv[0],dv[1],dv[2],
-	//										   &isect1[0],&isect1[1],isectpointA1,isectpointA2);
+				isect(v1, v2, v1[index], v2[index], d[1], d[2], isect1, isectpoint1);
+				isectType1 = EDGE_0;
+			}
+		}
+		else if (sd[1] == 0)
+		{
+			if (sd[2] == 0)
+			{
+				*isect0 = v1[index];
+				*isect1 = v2[index];
+				isectpoint0 = v1;
+				isectpoint1 = v2;
+				isectType0 = VER_1;
+				isectType1 = VER_2;
+			}
+			else if (sd[0]*sd[2] > 0) return -1; // point intersection
+			else
+			{
+				*isect0 = v1[index];
+				isectpoint0 = v1;
+				isectType0 = VER_1;
 
-	//	/* compute interval for triangle 2 */
-	//	double isect2[2]; 
-	//	Vec3d  isectpointB1,isectpointB2;
-	//	isCoplanar=compute_intervals_isectline(u0,u1,u2,up0,up1,up2,du[0],du[1],du[2],
-	//								&isect2[0],&isect2[1],isectpointB1,isectpointB2);
+				isect(v0, v2, v0[index], v2[index], d[0], d[2], isect1, isectpoint1);
+				isectType1 = EDGE_1;
+			}
+		}
+		else if (sd[2] == 0)
+		{
+			if (sd[0]*sd[1] > 0) return -1; // point intersection
+			else
+			{
+				*isect0 = v2[index];
+				isectpoint0 = v2;
+				isectType0 = VER_2;
 
-	//	int smallest1 = sort2(isect1[0],isect1[1]);
-	//	int smallest2 = sort2(isect2[0],isect2[1]);
-	//	if(isect1[1]<isect2[0] || isect2[1]<isect1[0])
-	//		return false;
+				isect(v0, v1, v0[index], v1[index], d[0], d[1], isect1, isectpoint1);
+				isectType1 = EDGE_2;
+			}
+		}
+		else
+		{
+			if (sd[0]*sd[1] > 0)
+			{
+				isect2(v2, v0, v1, index, d, isect0, isect1, isectpoint0, isectpoint1);
+				isectType0 = EDGE_1;		isectType1 = EDGE_0;
+			}
+			else if (sd[0]*sd[2] > 0)
+			{
+				isect2(v1, v0, v2, index, d, isect0, isect1, isectpoint0, isectpoint1);
+				isectType0 = EDGE_2;		isectType1 = EDGE_0;
+			}
+			else if (sd[1]*sd[2] > 0)
+			{
+				isect2(v0, v1, v2, index, d, isect0, isect1, isectpoint0 , isectpoint1);
+				isectType0 = EDGE_2;		isectType1 = EDGE_1;
+			}
+		}
 
-	//	/* at this point, we know that the triangles intersect */
-	//	GS::Seg3D<double> seg;
-	//	if(isect2[0]<isect1[0])
-	//	{
-	//		seg.start = smallest1==0 ? isectpointA1:isectpointA2;
- //         
-	//		if(isect2[1]<isect1[1])
-	//			seg.end = smallest2==0? isectpointB2 : isectpointB1;
-	//		else
-	//			seg.end = smallest1==0? isectpointA2 : isectpointA1;
-	//	}
-	//	else
-	//	{
-	//		seg.start = smallest2==0 ? isectpointB1:isectpointB2;
- //          
-	//		if(isect2[1]>isect1[1])
-	//			seg.end = smallest1 == 0 ? isectpointA2:isectpointA1;
-	//		else
-	//			seg.end = smallest2 == 0 ? isectpointB2:isectpointB1;
-	//	}
-	//	intersects.push_back(seg);
-	//	return true;
+		return 0;
+	}
+
+	template <typename P>
+	static inline int sort2(P& a, P& b)
+	{
+		if (a > b)
+		{
+			std::swap(a, b);
+			return 1;
+		}
+		return 0;
+	}
+
+
+	bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 
+							 const Vec3d& u0, const Vec3d& u1, const Vec3d& u2, const Vec3d& nu,
+							 int& startType, int& endType, Vec3d& start, Vec3d& end)
+	{
+		/* compute plane equation of triangle(p0,p1,p2) */
+		 double  d1=-dot(nv, v0);
+		/* plane equation 1: N1.X+d1=0 */
+		/* put U0,U1,U2 into plane equation 1 to compute signed distances to the plane*/
+		double du[3];
+		du[0] = dot(nv,u0)+d1;
+		du[1] = dot(nv,u1)+d1;
+		du[2] = dot(nv,u2)+d1;
+		int sdu[3];
+		GS::NormalDistToSign(du, sdu);
+
+		if ((sdu[0] == sdu[1]) && (sdu[1] == sdu[2]))
+			return false ; 
+
+		double d2=-dot(nu, u0);
+		double dv[3];
+		dv[0] =dot(nu,v0)+d2;
+		dv[1] = dot(nu,v1)+d2;
+		dv[2] = dot(nu,v2)+d2;
+		int sdv[3];
+		GS::NormalDistToSign(dv, sdv);
+		if ((sdv[0] == sdv[1]) && (sdv[1] == sdv[2]))
+			return false ;
+
+		/* compute direction of intersection line */
+		Vec3d LineDir = cross(nv, nu);
+
+		/* compute and index to the largest component of D */
+		double max=fabs(LineDir[0]);
+		int index=0;
+		double b=fabs(LineDir[1]);
+		double c=fabs(LineDir[2]);
+		if(b>max) max=b,index=1;
+		if(c>max) max=c,index=2;
+
+		/* compute interval for triangle 1 */
+		double isect1[2];   
+		Vec3d  isectpointA1,isectpointA2;
+		compute_intervals_isectline(v0,v1,v2,index,dv,sdv,&isect1[0],&isect1[1],isectpointA1,isectpointA2);
+
+		/* compute interval for triangle 2 */
+		double isect2[2]; 
+		Vec3d  isectpointB1,isectpointB2;
+		compute_intervals_isectline(u0,u1,u2,index,du,sdu,&isect2[0],&isect2[1],isectpointB1,isectpointB2);
+
+		int smallest1 = sort2(isect1[0],isect1[1]);
+		int smallest2 = sort2(isect2[0],isect2[1]);
+		if(isect1[1]<isect2[0] || isect2[1]<isect1[0])
+			return false;
+
+		/* at this point, we know that the triangles intersect */
+		if(isect2[0]<isect1[0])
+		{
+			start = smallest1==0 ? isectpointA1:isectpointA2;
+          
+			if(isect2[1]<isect1[1])
+				end = smallest2==0? isectpointB2 : isectpointB1;
+			else
+				end = smallest1==0? isectpointA2 : isectpointA1;
+		}
+		else
+		{
+			start = smallest2==0 ? isectpointB1:isectpointB2;
+           
+			if(isect2[1]>isect1[1])
+				end = smallest1 == 0 ? isectpointA2:isectpointA1;
+			else
+				end = smallest2 == 0 ? isectpointB2:isectpointB1;
+		}
+
+		return true;
 
 	}
 
