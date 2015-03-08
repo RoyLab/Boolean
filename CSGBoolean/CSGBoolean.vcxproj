@@ -49,7 +49,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Program Files %28x86%29\OpenMesh 3.3\lib;..\GSTest\Debug;..\GS\lib\Debug;C:\Program Files (x86)\tbb42\lib\ia32\vc11;$(CGAL_DIR)/lib;$(BOOST_INCLUDEDIR)/lib32-msvc-11.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>C:\fade2d_v1.19\fadeRelease\Win32;C:\Program Files %28x86%29\OpenMesh 3.3\lib;..\GSTest\Debug;..\GS\lib\Debug;C:\Program Files (x86)\tbb42\lib\ia32\vc11;$(CGAL_DIR)/lib;$(BOOST_INCLUDEDIR)/lib32-msvc-11.0;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>fade2D_vc11_Debug.lib;OpenMeshCored.lib;OpenMeshToolsd.lib;GS.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
