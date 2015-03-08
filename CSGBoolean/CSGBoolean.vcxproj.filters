@@ -62,5 +62,8 @@
     <ClInclude Include="AABBmp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="IsectTriangle.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

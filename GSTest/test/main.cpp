@@ -1,24 +1,29 @@
 #pragma comment(lib, "GS.lib")
 #include <iostream>
 #include <vector>
-#include "adaptive.h"
+#include "Box3.h"
+#include "configure.h"
+#include "topology.h"
+#include "Intersect.h"
 
+using namespace GS;
 
 int main()
 {
-	GS::exactinit();
-	//GS::double4x4 mat;
-	//mat[0] = GS::double4(1, 0, 0, 0);
-	//mat[1] = GS::double4(0, 1.1, 1.1, 0);
-	//mat[2] = GS::double4(0, 1+pow(0.5, 52), 1+pow(0.5, 52), 0);
-	//mat[3] = GS::double4(0, 0, 0, 1);
-	//std::cout << GS::adaptiveDet4x4Sign(mat) << std::endl;
+	double3 v0, v1, v2, u0, u1, u2, nv, nu;
+	std::vector<Seg3D<double>> isect;
 
-	GS::double3x3 mat;
-	mat[0] = GS::double3(1, 1-pow(0.5, 52), 0);
-	mat[1] = GS::double3(1, 1, 0);
-	mat[2] = GS::double3(0, 0, 2);
-	std::cout << GS::adaptiveDet3x3Sign(mat) << std::endl;
+	v0 = double3(0,0,0);
+	v1 = double3(2,0,0);
+	v2 = double3(2,2,0);
+	u0 = double3(1,0,0);
+	u1 = double3(3,0,0);
+	u2 = double3(3,2,0);
+
+	nv = normalize(cross(v1-v0, v2-v1));
+	nu = normalize(cross(u1-u0, u2-u1));
+
+	TriTriIntersectTest(v0, v1, v2, nv, u0, u1, u2, nu, isect);
 	system("pause");
 	return 0;
 }

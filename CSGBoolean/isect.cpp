@@ -95,4 +95,97 @@ namespace CSG
         double  s = dot (normal,  bbox.Center()) + d; 
         return  (fabs(s) <= (r1)); 
     }
+
+	//bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 
+	//						 const Vec3d& u0, const Vec3d& u1, const Vec3d& u2, const Vec3d& nu,
+	//						 std::vector<GS::Seg3D<double>>& intersects)
+	//{
+	//	/* compute plane equation of triangle(p0,p1,p2) */
+	//	 double  d1=-dot(nv, v0);
+	//	/* plane equation 1: N1.X+d1=0 */
+	//	/* put U0,U1,U2 into plane equation 1 to compute signed distances to the plane*/
+	//	double du[3];
+	//	du[0] = dot(nv,u0)+d1;
+	//	du[1] = dot(nv,u1)+d1;
+	//	du[2] = dot(nv,u2)+d1;
+	//	int sdu[3];
+	//	NormalDistToSign(du, sdu);
+	//	if(sdu[0] == 0 && sdu[1] == 0 && sdu [2] ==0)
+	//		return false;
+
+	//	if ((sdu[0] == sdu[1]) && (sdu[1] == sdu[2]))
+	//		return false ; 
+
+	//	double d2=-dot(nu, u0);
+	//	double dv[3];
+	//	dv[0] =dot(nu,v0)+d2;
+	//	dv[1] = dot(nu,v1)+d2;
+	//	dv[2] = dot(nu,v2)+d2;
+	//	int sdv[3];
+	//	NormalDistToSign(dv, sdv);
+	//	if ((sdv[0] == sdv[1]) && (sdv[1] == sdv[2]))
+	//		return false ; 
+	//	/* compute direction of intersection line */
+	//	Vec3d LineDir = cross(nv, nu);
+
+	//	/* compute and index to the largest component of D */
+	//	double max=fabs(LineDir.x);
+	//	int index=0;
+	//	double b=fabs(LineDir.y);
+	//	double c=fabs(LineDir.z);
+	//	if(b>max) max=b,index=1;
+	//	if(c>max) max=c,index=2;
+
+	//	/* this is the simplified projection onto L*/
+	//	double vp0=v0[index];
+	//	double vp1=v1[index];
+	//	double vp2=v2[index];
+
+	//	double up0=u0[index];
+	//	double up1=u1[index];
+	//	double up2=u2[index];
+
+	//	/* compute interval for triangle 1 */
+	//	double isect1[2];   
+	//	Vec3d  isectpointA1,isectpointA2;
+	//	bool isCoplanar=compute_intervals_isectline(v0,v1,v2,vp0,vp1,vp2,dv[0],dv[1],dv[2],
+	//										   &isect1[0],&isect1[1],isectpointA1,isectpointA2);
+
+	//	/* compute interval for triangle 2 */
+	//	double isect2[2]; 
+	//	Vec3d  isectpointB1,isectpointB2;
+	//	isCoplanar=compute_intervals_isectline(u0,u1,u2,up0,up1,up2,du[0],du[1],du[2],
+	//								&isect2[0],&isect2[1],isectpointB1,isectpointB2);
+
+	//	int smallest1 = sort2(isect1[0],isect1[1]);
+	//	int smallest2 = sort2(isect2[0],isect2[1]);
+	//	if(isect1[1]<isect2[0] || isect2[1]<isect1[0])
+	//		return false;
+
+	//	/* at this point, we know that the triangles intersect */
+	//	GS::Seg3D<double> seg;
+	//	if(isect2[0]<isect1[0])
+	//	{
+	//		seg.start = smallest1==0 ? isectpointA1:isectpointA2;
+ //         
+	//		if(isect2[1]<isect1[1])
+	//			seg.end = smallest2==0? isectpointB2 : isectpointB1;
+	//		else
+	//			seg.end = smallest1==0? isectpointA2 : isectpointA1;
+	//	}
+	//	else
+	//	{
+	//		seg.start = smallest2==0 ? isectpointB1:isectpointB2;
+ //          
+	//		if(isect2[1]>isect1[1])
+	//			seg.end = smallest1 == 0 ? isectpointA2:isectpointA1;
+	//		else
+	//			seg.end = smallest2 == 0 ? isectpointB2:isectpointB1;
+	//	}
+	//	intersects.push_back(seg);
+	//	return true;
+
+	}
+
+
 }

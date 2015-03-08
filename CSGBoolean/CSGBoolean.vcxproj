@@ -86,6 +86,7 @@
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="CMesh.h" />
     <ClInclude Include="isect.h" />
+    <ClInclude Include="IsectTriangle.h" />
     <ClInclude Include="MPMesh.h" />
     <ClInclude Include="precompile.h" />
   </ItemGroup>
