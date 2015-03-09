@@ -454,7 +454,6 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 int main()
 {
 	Vec3d v0, v1, v2, u0, u1, u2, nv, nu, s, t;
-
 	v0 = Vec3d(0,0,0);
 	v1 = Vec3d(2,0,0);
 	v2 = Vec3d(2,2,0);

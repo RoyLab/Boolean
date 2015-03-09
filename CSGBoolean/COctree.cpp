@@ -2,12 +2,16 @@
 #include "COctree.h"
 #include "MPMesh.h"
 #include "isect.h"
-
+#include "Plane.h"
+#include "Box3.h"
+#include "topology.h"
 
 namespace CSG
 {
 	static const int MAX_TRIANGLE_COUNT = 25;
 	static const int MAX_LEVEL = 8;
+
+	//extern const char POINT_INOUT_TEST_STRING[16] = "PINOUT";
 
     static void BuildOctree(OctreeNode* root, Octree* pOctree, int level)
     {
@@ -31,7 +35,7 @@ namespace CSG
             AABBmp &bbox = root->BoundingBox;
             Vec3d step = bbox.Diagonal()*0.5;
     
-            for (uint i = 0; i < 8 ; i++)
+            for (unsigned i = 0; i < 8 ; i++)
             {
                 auto pChild = &root->Child[i];
 
@@ -52,17 +56,17 @@ namespace CSG
                 auto &triangles = triTab.second;
                 auto pMesh = pOctree->pMesh[triTab.first];
 
-                const uint tn = triangles.size();
+                const unsigned tn = triangles.size();
 				int count;
 				MPMesh::FaceHandle fhandle;
 				MPMesh::FaceVertexIter fvItr;
-                for (uint i = 0; i < tn; i++)
+                for (unsigned i = 0; i < tn; i++)
                 {
                     // intersection test, can be optimized!!!
-					fhandle = pMesh->face_handle(triangles[i]);
+					fhandle = triangles[i];
                     count = 0;
 
-                    for (uint j = 0; j < 8; j++)
+                    for (unsigned j = 0; j < 8; j++)
                     {
                         count = 0;
 						fvItr = pMesh->fv_iter(fhandle);
@@ -89,7 +93,7 @@ namespace CSG
                 }
             }
 
-            for (uint i = 0; i < 8; i++)
+            for (unsigned i = 0; i < 8; i++)
             {
                 for (auto &itr: root->TriangleTable)
                 {
@@ -103,8 +107,7 @@ namespace CSG
         }
     }
 
-
-    Octree* BuildOctree(MPMesh** meshList, uint num)
+    Octree* BuildOctree(MPMesh** meshList, unsigned num)
     {
         if (!num) return NULL;
 
@@ -117,7 +120,7 @@ namespace CSG
         
         root->BoundingBox.Clear();
 		MPMesh *pMesh;
-        for (uint i = 0; i < num; i++)
+        for (unsigned i = 0; i < num; i++)
         {
 			pMesh = meshList[i];
             root->BoundingBox.IncludeBox(pMesh->BBox);
@@ -125,7 +128,7 @@ namespace CSG
             for (auto fItr = pMesh->faces_begin(); fItr != pMesh->faces_end(); fItr++)
             {
                 root->TriangleCount++;
-                root->TriangleTable[i].push_back(fItr->idx());
+                root->TriangleTable[i].push_back(*fItr);
             }
         }
 
@@ -144,8 +147,7 @@ namespace CSG
         return pOctree;
     }
 
-
-    /*static int FindFirstNode(double tx0, double ty0, double tz0, double txm, double tym, double tzm)
+    static int FindFirstNode(double tx0, double ty0, double tz0, double txm, double tym, double tzm)
     {
         unsigned char answer = 0; // initialize to 00000000
         // select the entry plane and set bits
@@ -179,8 +181,16 @@ namespace CSG
         return z; // XY plane;
     }
 
+    struct RayCastInfo
+    {
+        Vec3d pt;
+        Vec3d et;
+        Vec3d dir;
+        int nCross; // -1: Same , -2 : Opposite // 0: pmrOutside
+        GS::Plane<double> splane;
+    };
 
-    static inline bool PointWithPlane(const double3& normal, double distance,  const double3& pos) 
+    static inline bool PointWithPlane(const Vec3d& normal, double distance,  const Vec3d& pos) 
     {
         double dist = dot(pos, normal)+ distance; 
         if (dist > EPSF )
@@ -188,7 +198,7 @@ namespace CSG
         return false ; 
     }
 
-    inline bool PointWithPlane(const double3& normal, const double3& v0,  const double3& pos)
+    inline bool PointWithPlane(const Vec3d& normal, const Vec3d& v0,  const Vec3d& pos)
     {
         double dist =  dot(normal, (pos-v0)); 
         if (dist > EPSF )
@@ -196,37 +206,52 @@ namespace CSG
         return false; 
     }
 
-    struct RayCastInfo
+	static inline bool PointWithPlane(const GS::double3& normal, double distance,  const GS::double3& pos) 
     {
-        double3 pt;
-        double3 et;
-        double3 dir;
-        int nCross; // -1: Same , -2 : Opposite // 0: pmrOutside
-        Plane<double> splane;
-    };
+        double dist = dot(pos, normal)+ distance; 
+        if (dist > EPSF )
+            return true;
+        return false ; 
+    }
 
-    static int RayFaceTest(RayCastInfo* rayInfo, CSGMesh* pMesh, uint triId)
+	static inline bool SignDeterminant(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& v3)
+	{
+		return SignDeterminant(GS::double3(v0[0], v0[1], v0[2]),
+			GS::double3(v1[0], v1[1], v1[2]),
+			GS::double3(v2[0], v2[1], v2[2]),
+			GS::double3(v3[0], v3[1], v3[2]));
+	}
+
+	static inline void normalize(Vec3d& vec)
+	{
+		vec = vec/vec.length();
+	}
+
+
+    static int RayFaceTest(RayCastInfo* rayInfo, MPMesh* pMesh, MPMesh::FaceHandle triHandle)
     {
-        auto &triangle = pMesh->mTriangle[triId];
-        double3& v0 = pMesh->mVertex[triangle.VertexIndex[0]];
-        double3& v1 = pMesh->mVertex[triangle.VertexIndex[1]];
-        double3& v2 = pMesh->mVertex[triangle.VertexIndex[2]];
-        if (PointWithPlane(triangle.Normal, v0, rayInfo->pt) == PointWithPlane(triangle.Normal, v0, rayInfo->et) )
+		Vec3d normal = pMesh->normal(triHandle);
+		auto fvItr = pMesh->fv_begin(triHandle);
+        Vec3d v0 = pMesh->point(*fvItr);	fvItr++;
+        Vec3d v1 = pMesh->point(*fvItr);	fvItr++;
+        Vec3d v2 = pMesh->point(*fvItr);
+
+        if (PointWithPlane(normal, v0, rayInfo->pt) == PointWithPlane(normal, v0, rayInfo->et) )
             return 0;
         double t, u, v;
         if (!RayTriangleIntersectTest(rayInfo->pt, rayInfo->dir, v0, v1, v2, u, v, t))
             return 0 ; 
         if (t <= EPSF && t >= -EPSF)
         {
-            if (dot((rayInfo->et - rayInfo->pt),  triangle.Normal) < -EPSF) 
+            if (dot((rayInfo->et - rayInfo->pt),  normal) < -EPSF) 
             return -2;
         else return -1;
         }
         if (fabs(u) > EPSF &&  fabs(v) > EPSF && fabs(1-u-v) > EPSF)
         return 1;
-        bool A0 = PointWithPlane(rayInfo->splane.Normal(), rayInfo->splane.Distance(), v0);
-        bool A1 = PointWithPlane(rayInfo->splane.Normal(), rayInfo->splane.Distance(), v1);
-        bool A2 = PointWithPlane(rayInfo->splane.Normal(), rayInfo->splane.Distance(), v2);
+        bool A0 = PointWithPlane(Double3ToVec3d(rayInfo->splane.Normal()), rayInfo->splane.Distance(), v0);
+        bool A1 = PointWithPlane(Double3ToVec3d(rayInfo->splane.Normal()), rayInfo->splane.Distance(), v1);
+        bool A2 = PointWithPlane(Double3ToVec3d(rayInfo->splane.Normal()), rayInfo->splane.Distance(), v2);
         bool B0 = SignDeterminant(rayInfo->pt, rayInfo->et, v0, v1);
         bool B1 = SignDeterminant(rayInfo->pt, rayInfo->et, v1, v2);
         bool B2 = SignDeterminant(rayInfo->pt, rayInfo->et, v2, v0);
@@ -236,8 +261,7 @@ namespace CSG
         return Inte;
     }
 
-
-    static void RayCastThroughNode(OctreeNode* pNode, CSGMesh* pMesh, RayCastInfo* rayInfo, std::set<uint>& triSet)
+    static void RayCastThroughNode(OctreeNode* pNode, MPMesh* pMesh, RayCastInfo* rayInfo, unsigned Id)
     {
         if (pNode == NULL) return;
 
@@ -245,12 +269,18 @@ namespace CSG
         if (trianglesItr == pNode->TriangleTable.end()) return;
 
         auto &triangles = trianglesItr->second;
-        uint n = triangles.size();
+        unsigned n = triangles.size();
 
-        for (uint i = 0 ; i < n; i++)
+		MPMesh::FaceHandle fhandle;
+        for (unsigned i = 0 ; i < n; i++)
         {
-            if (!triSet.insert(triangles[i]).second) continue;
+			fhandle = triangles[i];
+
+			if (pMesh->property(pMesh->PointInOutTestPropHandle, fhandle) == Id) continue;
+			else pMesh->property(pMesh->PointInOutTestPropHandle, fhandle) = Id;
+
             int ret = RayFaceTest(rayInfo, pMesh, triangles[i]);
+
             //Point on the face
             if (ret< 0 )
             {
@@ -263,7 +293,7 @@ namespace CSG
     }
 
     static void ProcessSubNode(double tx0, double ty0, double tz0, double tx1, double ty1, double tz1, 
-                               OctreeNode* pNode, int& a, CSGMesh* pMesh, RayCastInfo* rayInfo, std::set<uint>& triSet)
+                               OctreeNode* pNode, int& a, MPMesh* pMesh, RayCastInfo* rayInfo, unsigned Id)
     {
         if (pNode == nullptr) return;
 
@@ -273,7 +303,7 @@ namespace CSG
             return; 
         if (pNode->Type != NODE_MIDSIDE)
         {
-            RayCastThroughNode(pNode, pMesh, rayInfo, triSet);
+            RayCastThroughNode(pNode, pMesh, rayInfo, Id);
             return ; 
         }
 
@@ -287,35 +317,35 @@ namespace CSG
             switch (currNode) 
             { 
                 case 0: {
-                    ProcessSubNode(tx0,ty0,tz0,txm,tym,tzm, &pNode->Child[a], a, pMesh, rayInfo, triSet);
+                    ProcessSubNode(tx0,ty0,tz0,txm,tym,tzm, &pNode->Child[a], a, pMesh, rayInfo, Id);
                     currNode = GetNextNode(txm,4,tym,2,tzm,1);
                     break;}
                 case 1: {
-                    ProcessSubNode(tx0,ty0,tzm,txm,tym,tz1, &pNode->Child[1^a], a, pMesh, rayInfo, triSet);
+                    ProcessSubNode(tx0,ty0,tzm,txm,tym,tz1, &pNode->Child[1^a], a, pMesh, rayInfo, Id);
                     currNode = GetNextNode(txm,5,tym,3,tz1,8);
                     break;}
                 case 2: {
-                    ProcessSubNode(tx0,tym,tz0,txm,ty1,tzm, &pNode->Child[2^a], a, pMesh, rayInfo, triSet);
+                    ProcessSubNode(tx0,tym,tz0,txm,ty1,tzm, &pNode->Child[2^a], a, pMesh, rayInfo, Id);
                     currNode = GetNextNode(txm,6,ty1,8,tzm,3);
                     break;}
                case 3: {
-                    ProcessSubNode(tx0,tym,tzm,txm,ty1,tz1, &pNode->Child[3^a], a, pMesh, rayInfo, triSet);
+                    ProcessSubNode(tx0,tym,tzm,txm,ty1,tz1, &pNode->Child[3^a], a, pMesh, rayInfo, Id);
                     currNode = GetNextNode(txm,7,ty1,8,tz1,8);
                     break;}
                case 4: {
-                    ProcessSubNode(txm,ty0,tz0,tx1,tym,tzm, &pNode->Child[4^a], a, pMesh, rayInfo, triSet);
+                    ProcessSubNode(txm,ty0,tz0,tx1,tym,tzm, &pNode->Child[4^a], a, pMesh, rayInfo, Id);
                     currNode = GetNextNode(tx1,8,tym,6,tzm,5);
                     break;}
               case 5: {
-                    ProcessSubNode(txm,ty0,tzm,tx1,tym,tz1, &pNode->Child[5^a], a, pMesh, rayInfo, triSet);
+                    ProcessSubNode(txm,ty0,tzm,tx1,tym,tz1, &pNode->Child[5^a], a, pMesh, rayInfo, Id);
                     currNode = GetNextNode(tx1,8,tym,7,tz1,8);
                     break;}
               case 6: {
-                    ProcessSubNode(txm,tym,tz0,tx1,ty1,tzm, &pNode->Child[6^a], a, pMesh, rayInfo, triSet);
+                    ProcessSubNode(txm,tym,tz0,tx1,ty1,tzm, &pNode->Child[6^a], a, pMesh, rayInfo, Id);
                     currNode = GetNextNode(tx1,8,ty1,8,tzm,7);
                     break;}
             case 7: {
-                    ProcessSubNode(txm,tym,tzm,tx1,ty1,tz1,&pNode->Child[7^a], a, pMesh, rayInfo, triSet);
+                    ProcessSubNode(txm,tym,tzm,tx1,ty1,tz1,&pNode->Child[7^a], a, pMesh, rayInfo, Id);
                     currNode = 8;
                     break;}
             }
@@ -323,53 +353,58 @@ namespace CSG
 
     }
 
-    static void RayTraverse(Octree* pOctree,  CSGMesh* pMesh, RayCastInfo* rayInfo)
+    static void RayTraverse(Octree* pOctree,  MPMesh* pMesh, RayCastInfo* rayInfo)
     {
         assert(pOctree);
-        AABB &RootBBox = pOctree->Root->BoundingBox;
-        std::set<uint> triSet;
+        AABBmp &RootBBox = pOctree->Root->BoundingBox;
+		static unsigned count = 0; // for every new raytraverse a new Id
+		count++;
 
         int a  =0; 
-        if (rayInfo->dir.x < 0.0)
+        if (rayInfo->dir[0] < 0.0)
         {
-            rayInfo->pt.x = RootBBox.Size().x - rayInfo->pt.x;
-            rayInfo->dir.x = - rayInfo->dir.x;
+            rayInfo->pt[0] = RootBBox.Size()[0] - rayInfo->pt[0];
+            rayInfo->dir[0] = - rayInfo->dir[0];
             a |= 4;
         }
-        if (rayInfo->dir.y < 0.0)
+        if (rayInfo->dir[1] < 0.0)
         {
-            rayInfo->pt.y = RootBBox.Size().y - rayInfo->pt.y;
-           rayInfo-> dir.y = - rayInfo->dir.y;
+            rayInfo->pt[1] = RootBBox.Size()[1] - rayInfo->pt[1];
+           rayInfo-> dir[1] = - rayInfo->dir[1];
             a |= 2;
         }
-        if (rayInfo->dir.z < 0.0)
+        if (rayInfo->dir[2] < 0.0)
         {
-            rayInfo->pt.z = RootBBox.Size().z - rayInfo->pt.z;
-            rayInfo->dir.z = - rayInfo->dir.z;
+            rayInfo->pt[2] = RootBBox.Size()[2] - rayInfo->pt[2];
+            rayInfo->dir[2] = - rayInfo->dir[2];
             a |= 1;
         }
-        double3 t0 = (RootBBox.Min() - rayInfo->pt) /rayInfo->dir;
-        double3 t1 = (RootBBox.Max() - rayInfo->pt) /rayInfo->dir;
-        if (max(t0.x, max(t0.y, t0.z)) < min(t1.x, min(t1.y, t1.z)))
-            ProcessSubNode(t0.x, t0.y, t0.z, t1.x, t1.y, t1.z, pOctree->Root, a, pMesh, rayInfo, triSet);
+        Vec3d t0 = (RootBBox.Min() - rayInfo->pt) /rayInfo->dir;
+        Vec3d t1 = (RootBBox.Max() - rayInfo->pt) /rayInfo->dir;
+        if (GS::max(t0[0], GS::max(t0[1], t0[2])) < GS::min(t1[0], GS::min(t1[1], t1[2])))
+            ProcessSubNode(t0[0], t0[1], t0[2], t1[0], t1[1], t1[2], pOctree->Root, a, pMesh, rayInfo, count);
     }
     
-    Relation PolyhedralInclusionTest(GS::double3& point, Octree* pOctree, uint meshId, bool IsInverse)
+    Relation PolyhedralInclusionTest(Vec3d& point, Octree* pOctree, unsigned meshId, bool IsInverse)
     {
-        if (!pOctree->pMesh[meshId]->mAABB.IsInBox(point))
+        if (!pOctree->pMesh[meshId]->BBox.IsInBox(point))
             return REL_OUTSIDE;
 
-        AABB &bbox = pOctree->Root->BoundingBox;
+        AABBmp &bbox = pOctree->Root->BoundingBox;
 
         RayCastInfo rayInfo;
         rayInfo.nCross = 0;
         rayInfo.pt = point;
-        rayInfo.et = bbox.Max() + double3(1,1,1);
-        rayInfo.dir = GS::normalize(rayInfo.et-point);
+        rayInfo.et = bbox.Max() + Vec3d(1,1,1);
+        rayInfo.dir = rayInfo.et-point;
+		normalize(rayInfo.dir);
 
-        double3 edge = rayInfo.et - double3(0.0,bbox.Size().y*0.5,0.0) - point;
-        double3 norm = GS::normalize(GS::cross(rayInfo.dir, edge));
-        rayInfo.splane = Plane<double>(norm, point);
+        Vec3d edge = rayInfo.et - Vec3d(0.0,bbox.Size()[1]*0.5,0.0) - point;
+        Vec3d norm = cross(rayInfo.dir, edge);
+		normalize(norm);
+		GS::double3 tmp1 = Vec3dToDouble3(norm);
+		GS::double3 tmp2 = Vec3dToDouble3(point);
+        rayInfo.splane = GS::Plane<double>(tmp1, tmp2);
         RayTraverse(pOctree, pOctree->pMesh[meshId], &rayInfo);
 
 		if (IsInverse)
@@ -390,7 +425,7 @@ namespace CSG
         case 1:     return REL_INSIDE;
         default:    return REL_OUTSIDE;
         }
-    }*/
+    }
 
 	OctreeNode::OctreeNode():
 		Child(0), Parent(0), TriangleCount(0)

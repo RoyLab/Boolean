@@ -11,11 +11,9 @@ namespace GS
 
 namespace CSG
 {
-    typedef unsigned uint;
-
     struct TriangleInfo
     {
-        uint VertexIndex[3];
+        unsigned VertexIndex[3];
         GS::double3 Normal;
         TriangleInfo(const int* index, const double3& normal)
         {

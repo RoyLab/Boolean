@@ -37,7 +37,7 @@ namespace CSG
     struct CSGTree
     {
         CSGTreeNode* pRoot;
-		std::map<uint, CSGTreeNode*> Leaves;
+		std::map<unsigned, CSGTreeNode*> Leaves;
 
 		CSGTree();
 		~CSGTree();
@@ -45,7 +45,7 @@ namespace CSG
 
     CSGTree* ConvertCSGTree(GS::CSGExprNode* root, MPMesh*** arrMesh, int *nMes); // convert nodes.
 	CSGTree* ConvertToPositiveTree(const CSGTree* tree);
-	Relation CompressCSGTree(CSGTree* tree, uint Id, Relation rel);
+	Relation CompressCSGTree(CSGTree* tree, unsigned Id, Relation rel);
 
     inline bool IsLeaf(CSGTreeNode* node) {return !(node->pLeft && node->pRight);}
     CSGTree* copy(const CSGTree* thiz);

@@ -438,4 +438,46 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 	}
 	return true;
 }
+
+bool RayTriangleIntersectTest(const Vec3d& o, const Vec3d& d, const Vec3d& v0, const Vec3d& v1,  const Vec3d& v2,
+                              double& u, double& v, double& t)
+{
+    Vec3d e1 = v1- v0;
+    Vec3d e2 = v2 -v0;
+    Vec3d p = cross(d, e2);
+    double det = dot (p, e1);
+
+    if (det > -EPSF && det < EPSF)
+        return false;
+
+    Vec3d f ; 
+    if( det >0 )
+        f = o -v0;
+     else {
+           f = v0 - o;
+          det = -det;
+     }
+        // If determinant is near zero, ray lies in plane of triangle
+       // Calculate u and make sure u <= 1
+      u = dot(f, p);
+     if( u < 0.0f || u > det )
+         return false;
+
+   // Q
+   Vec3d q = cross(f, e1);
+
+    // Calculate v and make sure u + v <= 1
+   v = dot(q, d);
+    if( v < 0.0f || u + v > det )
+       return false;
+
+   // Calculate t, scale parameters, ray intersects triangle
+    t = dot(q, e2);
+
+   float fInvDet = 1.0f / det;
+    t *= fInvDet;
+    u *= fInvDet;
+    v *= fInvDet;
+    return true;
+}
 }

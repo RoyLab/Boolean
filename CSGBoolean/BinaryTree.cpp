@@ -4,7 +4,7 @@
 #include <cassert>
 #include <climits>
 
-// TO-DO: we need method called findLeaf(uint Id)
+// TO-DO: we need method called findLeaf(unsigned Id)
 // to instead GetLeafList;
 
 
@@ -103,7 +103,7 @@ namespace CSG
         return pRes;
     }
 
-	static CSGTreeNode* ConvertToPositiveTree(const CSGTreeNode* root, bool inverse, uint level, uint& maxLvl)
+	static CSGTreeNode* ConvertToPositiveTree(const CSGTreeNode* root, bool inverse, unsigned level, unsigned& maxLvl)
 	{
 		CSGTreeNode* res = new CSGTreeNode;
 		if (root->Type == TYPE_LEAF) // it is a leaf node
@@ -116,7 +116,7 @@ namespace CSG
 		}
 		else
 		{
-			uint Ldepth(0), Rdepth(0);
+			unsigned Ldepth(0), Rdepth(0);
 			if (root->Type == TYPE_DIFF)
 			{
 				res->Type = TYPE_INTERSECT;
@@ -168,7 +168,7 @@ namespace CSG
 	CSGTree* ConvertToPositiveTree(const CSGTree* myTree)
 	{
 		CSGTree* result = new CSGTree;
-		uint maxLvl = 0;
+		unsigned maxLvl = 0;
 		result->pRoot = ConvertToPositiveTree(myTree->pRoot, false, 0, maxLvl);
 		GetLeafList(result);
 		return result;
@@ -198,7 +198,7 @@ namespace CSG
 		return pCopy;
 	}
 
-	static Relation CompressCSGTreeWithInside(CSGTree* tree, uint Id)
+	static Relation CompressCSGTreeWithInside(CSGTree* tree, unsigned Id)
 	{
 		auto leaf = tree->Leaves[Id];
 
@@ -278,7 +278,7 @@ namespace CSG
 		return REL_UNKNOWN;
 	}
 
-	static Relation CompressCSGTreeWithOutside(CSGTree* tree, uint Id)
+	static Relation CompressCSGTreeWithOutside(CSGTree* tree, unsigned Id)
 	{
 		auto leaf = tree->Leaves[Id];
 		CSGTreeNode *curPtr = leaf, *parent = leaf->Parent;
@@ -357,7 +357,7 @@ namespace CSG
 		return REL_UNKNOWN;
 	}
 	
-	Relation CompressCSGTree(CSGTree* tree, uint Id, Relation rel)
+	Relation CompressCSGTree(CSGTree* tree, unsigned Id, Relation rel)
 	{
 		// T∩N⇒N,  F∪N⇒N, F∩N⇒F, and T∪N⇒T
 		if (tree->Leaves.find(Id) == tree->Leaves.end())

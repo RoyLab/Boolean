@@ -1,6 +1,7 @@
 #include "precompile.h"
 #include "MPMesh.h"
 #include "BaseMesh.h"
+#include "COctree.h"
 
 namespace CSG
 {
@@ -14,11 +15,15 @@ namespace CSG
         ID(-1), pOrigin(pMesh), bInverse(false)
     {
 		request_face_normals();
+		add_property(PointInOutTestPropHandle);
+		add_property(SurfacePropHandle);
     }
 
     MPMesh::~MPMesh(void)
     {
 		release_face_normals();
+		remove_property(PointInOutTestPropHandle);
+		remove_property(SurfacePropHandle);
     }
 
 	MPMesh* ConvertToMPMesh(GS::BaseMesh* pMesh)
@@ -31,6 +36,7 @@ namespace CSG
         for (int i = 0; i < n; i++)
 		{
             vhandle = res->add_vertex(convert_double3(pMesh->Vertex(i).pos));
+			//res->property(res->PointInOutTestPropHandle, vhandle) = 0;
 			res->BBox.IncludePoint(res->point(vhandle));
 		}
 
@@ -38,11 +44,11 @@ namespace CSG
         n = (int)pMesh->PrimitiveCount();
         for (int i = 0; i < n; i++)
         {
-            auto &index = pMesh->TriangleInfo(i);
-			face_vhandles[0] = res->vertex_handle(index.VertexId[0]);
-			face_vhandles[1] = res->vertex_handle(index.VertexId[1]);
-			face_vhandles[2] = res->vertex_handle(index.VertexId[2]);
-            auto hwd = res->add_face(face_vhandles);
+            auto &info = pMesh->TriangleInfo(i);
+			face_vhandles[0] = res->vertex_handle(info.VertexId[0]);
+			face_vhandles[1] = res->vertex_handle(info.VertexId[1]);
+			face_vhandles[2] = res->vertex_handle(info.VertexId[2]);
+            res->add_face(face_vhandles);
         }
 
 		res->update_normals();
