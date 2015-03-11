@@ -8,8 +8,8 @@
 
 namespace CSG
 {
-	static const int MAX_TRIANGLE_COUNT = 50;
-	static const int MAX_LEVEL = 7;
+	static const int MAX_TRIANGLE_COUNT = 30;
+	static const int MAX_LEVEL = 9;
 
 	//extern const char POINT_INOUT_TEST_STRING[16] = "PINOUT";
 

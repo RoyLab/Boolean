@@ -45,17 +45,17 @@ namespace CSG
 		for (auto &pair: pNode->DiffMeshIndex) pair.Rela = famap[pair.ID];
 
 		std::map<unsigned, Relation> relmap;
-		for (int i = 0; i < 8; i++)
-		{
-			for (auto &pair: pNode->Child[i].DiffMeshIndex)
-			{
-				if (relmap.find(pair.ID) != relmap.end()) continue;
-				else relmap[pair.ID] = PolyhedralInclusionTest(pNode->Child[i].BoundingBox.Center(), pOctree, pair.ID);
-			}
-		}
-
 		if (pNode->Child)
 		{
+			for (int i = 0; i < 8; i++)
+			{
+				for (auto &pair: pNode->Child[i].DiffMeshIndex)
+				{
+					if (relmap.find(pair.ID) != relmap.end()) continue;
+					else relmap[pair.ID] = PolyhedralInclusionTest(pNode->Child[i].BoundingBox.Center(), pOctree, pair.ID);
+				}
+			}
+
 			for (unsigned i = 0; i < 8; i++)
 				RelationTest(&pNode->Child[i], pOctree, relmap);
 		}
@@ -175,6 +175,7 @@ namespace CSG
 							nv = meshi->normal(tri1);
 							nu = meshj->normal(tri2);
 							
+							startT = INNER; endT = INNER; // return to Zero.
 							isISect = TriTriIntersectTest(*v0, *v1, *v2, nv,
 								*u0, *u1, *u2, nu, startT, endT, start, end);
 
@@ -252,6 +253,7 @@ namespace CSG
 
 		delete pOctree;
 		delete pPosCSG;
+		delete input;
 
 		ReleaseZone();
 		for (int i = 0; i < nMesh; i++)

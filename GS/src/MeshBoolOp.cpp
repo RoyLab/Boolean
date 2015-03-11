@@ -40,7 +40,6 @@ BaseMesh*  MeshBoolOp::ComputeBoolean(BaseMesh* mesh1,  BaseMesh* mesh2, BOOL_OP
     }
 
 	BaseMesh* res = DoCompute(pNode);
-	delete pNode;
 	return res;
 }
 
@@ -62,7 +61,6 @@ BaseMesh*  MeshBoolOp::Evalute(std::vector<BaseMesh*>& meshList, std::string& po
     //construct CSGExproNode 
     CSGExprNode* pNode = EvalutePostfix(meshList, postfix);
     BaseMesh* res = DoCompute(pNode);
-	delete pNode;
 	return res;
 }
 

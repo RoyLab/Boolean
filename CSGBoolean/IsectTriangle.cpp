@@ -86,10 +86,17 @@ namespace CSG
 
 	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec)
 	{
-		assert(pos >= EDGE_0 && pos <= INNER);
+		assert(pos >= INNER && pos <= VER_2);
 
 		ISVertexItr output;
-		if (pos <= EDGE_2)
+		if (pos == INNER)
+		{
+			ISVertexInfo info;
+			info.pos = ZONE->mesh.add_vertex(vec);
+			tri->vertices.push_front(info);
+			output = tri->vertices.begin();
+		}
+		else if (pos <= EDGE_2)
 		{
 			if (!IsVertexExisted(tri, vec, output))
 			{
@@ -120,7 +127,7 @@ namespace CSG
 			if (!other) other = new ISectTriangle(mesh, *ffItr);
 			InsertPoint(other, INNER, output);
 		}
-		else if (pos <= VER_2)
+		else
 		{
 			// get the iterator of vertex #WR#
 			switch (pos)
@@ -136,14 +143,6 @@ namespace CSG
 				break;
 			}
 		}
-		else 
-		{
-			assert(pos == INNER);
-			ISVertexInfo info;
-			info.pos = ZONE->mesh.add_vertex(vec);
-			tri->vertices.push_front(info);
-			output = tri->vertices.begin();
-		}
 
 		while (!output->pos.is_valid()) output = output->next;
 		return output;
@@ -151,15 +150,20 @@ namespace CSG
 
 	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr ref)
 	{
-		assert(pos >= EDGE_0 && pos <= INNER);
+		assert(pos >= INNER && pos <= VER_2);
 		//assert(ref->pos.is_valid());
 		while (!ref->pos.is_valid()) ref = ref->next;
 
-		Vec3d vec = tri->pMesh->point(ref->pos);
+		Vec3d vec = ZONE->mesh.point(ref->pos);
 		ISVertexItr output;
 		ISVertexInfo info;
 		info.next = ref;
-		if (pos <= EDGE_2)
+		if (pos == INNER)
+		{
+			tri->vertices.push_front(info);
+			output = tri->vertices.begin();
+		}
+		else if (pos <= EDGE_2)
 		{
 			if (!IsVertexExisted(tri, vec, output))
 			{
@@ -193,7 +197,7 @@ namespace CSG
 			if (!other) other = new ISectTriangle(mesh, *ffItr);
 			InsertPoint(other, INNER, ref);
 		}
-		else if (pos <= VER_2)
+		else
 		{
 			// get the iterator of vertex #WR#
 			switch (pos)
@@ -214,12 +218,6 @@ namespace CSG
 				output = tri->corner[2];
 				break;
 			}
-		}
-		else 
-		{
-			assert(pos == INNER);
-			tri->vertices.push_front(info);
-			output = tri->vertices.begin();
 		}
 		
 		return output;
