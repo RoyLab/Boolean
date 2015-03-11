@@ -40,24 +40,34 @@ namespace CSG
 	}
 
 
-	/*static void RelationTest(OctreeNode* pNode, Octree* pOctree)
+	static void RelationTest(OctreeNode* pNode, Octree* pOctree, std::map<unsigned, Relation>& famap)
 	{
-		for (auto &pair: pNode->DiffMeshIndex)
-			pair.Rela = PolyhedralInclusionTest(pNode->BoundingBox.Center(),
-			pOctree, pair.ID);
+		for (auto &pair: pNode->DiffMeshIndex) pair.Rela = famap[pair.ID];
+
+		std::map<unsigned, Relation> relmap;
+		for (int i = 0; i < 8; i++)
+		{
+			for (auto &pair: pNode->Child[i].DiffMeshIndex)
+			{
+				if (relmap.find(pair.ID) != relmap.end()) continue;
+				else relmap[pair.ID] = PolyhedralInclusionTest(pNode->Child[i].BoundingBox.Center(), pOctree, pair.ID);
+			}
+		}
 
 		if (pNode->Child)
 		{
 			for (unsigned i = 0; i < 8; i++)
-				RelationTest(&pNode->Child[i], pOctree);
+				RelationTest(&pNode->Child[i], pOctree, relmap);
 		}
 	}
 
 	static void RelationTest(Octree* pOctree)
 	{
-		RelationTest(pOctree->Root, pOctree);
+		std::map<unsigned, Relation> relmap;
+		RelationTest(pOctree->Root, pOctree, relmap);
 	}
 
+	/*
 	static void TagNode(OctreeNode* root, const CSGTree* last)
 	{
 		const CSGTree* cur(nullptr);
@@ -111,7 +121,7 @@ namespace CSG
 
 		if (isMemAllocated) delete cur; // !! cur is a const pointer
 	}
-
+	
 	static void TagLeaves(Octree* pOctree, CSGTree* pCSG)
 	{
 		TagNode(pOctree->Root, pCSG);
@@ -131,7 +141,7 @@ namespace CSG
 			unsigned i, j, ni, nj;
 			MPMesh *meshi, *meshj;
 			MPMesh::FaceHandle tri1, tri2;
-			Vec3d v0,v1,v2,nv,u0,u1,u2,nu,start,end;
+			Vec3d *v0,*v1,*v2, nv,*u0,*u1,*u2,nu,start,end;
 			MPMesh::FVIter fvItr;
 			bool isISect;
 			int startT(0), endT(0);
@@ -159,21 +169,14 @@ namespace CSG
 							tri2 = itr2->second[j];
 
 							// intersection test main body
-							fvItr = meshi->fv_iter(tri1);
-							v0 = meshi->point(*fvItr++);
-							v1 = meshi->point(*fvItr++);
-							v2 = meshi->point(*fvItr);
-
-							fvItr = meshj->fv_iter(tri2);
-							u0 = meshj->point(*fvItr++);
-							u1 = meshj->point(*fvItr++);
-							u2 = meshj->point(*fvItr);
+							GetCorners(meshi, tri1, v0, v1, v2);
+							GetCorners(meshj, tri2, u0, u1, u2);
 
 							nv = meshi->normal(tri1);
 							nu = meshj->normal(tri2);
 							
-							isISect = TriTriIntersectTest(v0, v1, v2, nv,
-								u0, u1, u2, nu, startT, endT, start, end);
+							isISect = TriTriIntersectTest(*v0, *v1, *v2, nv,
+								*u0, *u1, *u2, nu, startT, endT, start, end);
 
 							if (!isISect) continue;
 
@@ -241,6 +244,8 @@ namespace CSG
 		ISectTest(pOctree);
         DebugInfo("ISectTest", t0);
 
+		RelationTest(pOctree);
+        DebugInfo("RelationTest", t0);
 		//int i = 100000;
 		//while (i--)
 		//PolyhedralInclusionTest(Vec3d(0, 4, 0), pOctree, 0);

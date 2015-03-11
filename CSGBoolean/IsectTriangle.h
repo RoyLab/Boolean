@@ -50,7 +50,7 @@ namespace CSG
 		int mainIndex;
 		std::set<int> relationTestId;
 
-		ISVertexInfo				corner[3];
+		ISVertexItr				corner[3]; // point to the first three elements in [vertices] #WR#
 		std::list<ISVertexInfo> vertices;
 		std::list<ISCutSeg>		segs;
 		
@@ -70,7 +70,7 @@ namespace CSG
 	void ReleaseZone();
 	void Register(ISectTriangle*);
 	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec);
-	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr v);
+	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr ref);
 	void InsertSegment(ISectTriangle* tri, ISVertexItr v0, ISVertexItr v1, ISectTriangle* tri2);
 
 } // namespace CSG
