@@ -8,8 +8,8 @@
 
 namespace CSG
 {
-	static const int MAX_TRIANGLE_COUNT = 25;
-	static const int MAX_LEVEL = 8;
+	static const int MAX_TRIANGLE_COUNT = 50;
+	static const int MAX_LEVEL = 7;
 
 	//extern const char POINT_INOUT_TEST_STRING[16] = "PINOUT";
 
@@ -50,6 +50,7 @@ namespace CSG
 
                 pChild->Parent = root;
             }
+			Vec3d v0, v1, v2;
 
             for (auto &triTab: root->TriangleTable)
             {
@@ -70,9 +71,9 @@ namespace CSG
                     {
                         count = 0;
 						fvItr = pMesh->fv_iter(fhandle);
-                        auto &v0 = pMesh->point(*fvItr);	fvItr++;
-                        auto &v1 = pMesh->point(*fvItr);	fvItr++;
-                        auto &v2 = pMesh->point(*fvItr);
+                        v0 = pMesh->point(*fvItr);	fvItr++;
+                        v1 = pMesh->point(*fvItr);	fvItr++;
+                        v2 = pMesh->point(*fvItr);
                         auto &aabb = root->Child[j].BoundingBox;
 
                         if (aabb.IsInBox_LORC(v0)) count++;

@@ -1,15 +1,17 @@
 #include "precompile.h"
 #include "MPMesh.h"
+#include <limits>
 #include "BaseMesh.h"
 #include "COctree.h"
 
 namespace CSG
 {
+	static const unsigned VERTEX_ID_INIT = UINT_MAX;
+
 	inline OpenMesh::Vec3d convert_double3(GS::double3& vec)
 	{
 		return OpenMesh::Vec3d(vec.x, vec.y, vec.z);
 	}
-	
 
 	MPMesh::MPMesh(GS::BaseMesh* pMesh):
         ID(-1), pOrigin(pMesh), bInverse(false)
@@ -17,6 +19,7 @@ namespace CSG
 		request_face_normals();
 		add_property(PointInOutTestPropHandle);
 		add_property(SurfacePropHandle);
+		add_property(VertexIndexPropHandle);
     }
 
     MPMesh::~MPMesh(void)
@@ -24,6 +27,7 @@ namespace CSG
 		release_face_normals();
 		remove_property(PointInOutTestPropHandle);
 		remove_property(SurfacePropHandle);
+		remove_property(VertexIndexPropHandle);
     }
 
 	MPMesh* ConvertToMPMesh(GS::BaseMesh* pMesh)

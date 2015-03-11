@@ -6,6 +6,13 @@ using OpenMesh::Vec3d;
 
 namespace CSG
 {
+	inline bool IsEqual(const Vec3d& v1, const Vec3d& v2)
+	{
+		if (fabs(v1[0] - v2[0]) > EPSF) return false;
+		if (fabs(v1[1] - v2[1]) > EPSF) return false;
+		if (fabs(v1[2] - v2[2]) > EPSF) return false;
+		return true;
+	}
 
 	bool TriangleAABBIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const AABBmp& bbox);
 	bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 

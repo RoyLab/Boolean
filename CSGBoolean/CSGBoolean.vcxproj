@@ -76,6 +76,7 @@
     <ClCompile Include="BinaryTree.cpp" />
     <ClCompile Include="CMesh.cpp" />
     <ClCompile Include="isect.cpp" />
+    <ClCompile Include="IsectTriangle.cpp" />
     <ClCompile Include="MPMesh.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -34,8 +34,9 @@ namespace CSG
 
         GS::BaseMesh* pOrigin;
 
-		OpenMesh::FPropHandleT<unsigned> PointInOutTestPropHandle;
-		OpenMesh::FPropHandleT<ISectTriangle*> SurfacePropHandle;
+		OpenMesh::FPropHandleT<unsigned> PointInOutTestPropHandle; // 是否在内外测试中被检测过
+		OpenMesh::FPropHandleT<ISectTriangle*> SurfacePropHandle; // 是否属于相交三角形
+		OpenMesh::VPropHandleT<MPMesh::VertexHandle> VertexIndexPropHandle; // 在结果网格中的index
 	};
 
 

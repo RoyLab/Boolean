@@ -28,15 +28,6 @@
 
 namespace CSG
 {
-	static inline bool IsEqual(const Vec3d& v1, const Vec3d& v2)
-	{
-		if (fabs(v1[0] - v2[0]) > EPSF) return false;
-		if (fabs(v1[1] - v2[1]) > EPSF) return false;
-		if (fabs(v1[2] - v2[2]) > EPSF) return false;
-		return true;
-	}
-
-
 	bool TriangleAABBIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const AABBmp& bbox)
 	    {
         // 我认为，这里的不等号加上等于号之后，可以作为开集的相交测试
@@ -183,7 +174,17 @@ static inline int compute_intervals_isectline(const Vec3d& v0, const Vec3d& v1, 
 			isectType1 = VER_2;
 			return EDGE_1;
 		}
-		else if (sd[1]*sd[2] > 0) return -1; // point intersection
+		else if (sd[1]*sd[2] > 0)
+		{
+			*isect0 = v0[index];
+			*isect1 = v0[index];
+			isectpoint0 = v0;
+			isectpoint1 = v0;
+			isectType0 = VER_0;
+			isectType1 = VER_0;
+			return VER_0;
+			//return -1; // point intersection
+		}
 		else
 		{
 			*isect0 = v0[index];
@@ -206,7 +207,17 @@ static inline int compute_intervals_isectline(const Vec3d& v0, const Vec3d& v1, 
 			isectType1 = VER_2;
 			return EDGE_0;
 		}
-		else if (sd[0]*sd[2] > 0) return -1; // point intersection
+		else if (sd[0]*sd[2] > 0)
+		{
+			*isect0 = v1[index];
+			*isect1 = v1[index];
+			isectpoint0 = v1;
+			isectpoint1 = v1;
+			isectType0 = VER_1;
+			isectType1 = VER_1;
+			return VER_1;
+			//return -1; // point intersection
+		}
 		else
 		{
 			*isect0 = v1[index];
@@ -219,7 +230,17 @@ static inline int compute_intervals_isectline(const Vec3d& v0, const Vec3d& v1, 
 	}
 	else if (sd[2] == 0)
 	{
-		if (sd[0]*sd[1] > 0) return -1; // point intersection
+		if (sd[0]*sd[1] > 0)
+		{
+			*isect0 = v2[index];
+			*isect1 = v2[index];
+			isectpoint0 = v2;
+			isectpoint1 = v2;
+			isectType0 = VER_2;
+			isectType1 = VER_2;
+			return VER_2;
+			//return -1; // point intersection
+		}
 		else
 		{
 			*isect0 = v2[index];
@@ -266,13 +287,13 @@ static inline int sort2(P& a, P& b)
 	return 0;
 }
 
-
+/* return: 1 means isect with line segment; 0 means no isect; -1 means isect with point */
 bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 
 							const Vec3d& u0, const Vec3d& u1, const Vec3d& u2, const Vec3d& nu,
 							int& startType, int& endType, Vec3d& start, Vec3d& end)
 {
 	/* compute plane equation of triangle(p0,p1,p2) */
-		double  d1=-dot(nv, v0);
+	double  d1=-dot(nv, v0);
 	/* plane equation 1: N1.X+d1=0 */
 	/* put U0,U1,U2 into plane equation 1 to compute signed distances to the plane*/
 	double du[3];
@@ -283,7 +304,7 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 	GS::NormalDistToSign(du, sdu);
 
 	if ((sdu[0] == sdu[1]) && (sdu[1] == sdu[2]))
-		return false ; 
+		return false; 
 
 	double d2=-dot(nu, u0);
 	double dv[3];
@@ -293,7 +314,7 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 	int sdv[3];
 	GS::NormalDistToSign(dv, sdv);
 	if ((sdv[0] == sdv[1]) && (sdv[1] == sdv[2]))
-		return false ;
+		return false;
 
 	/* compute direction of intersection line */
 	Vec3d LineDir = cross(nv, nu);
@@ -324,7 +345,7 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 
 	int smallest1 = sort2(isect1[0],isect1[1]);
 	int smallest2 = sort2(isect2[0],isect2[1]);
-	if(isect1[1]<isect2[0] || isect2[1]<isect1[0])
+	if(isect1[1]<isect2[0] || isect2[1]<isect1[0]) // 要不要用epsf?
 		return false;
 
 	/* at this point, we know that the triangles intersect */
@@ -356,7 +377,7 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 			start = isectpointB2;
 			startType ^= type11;
 		}
-		if (res1) startType ^= res1;
+		if (res1) startType ^= res1; // 这里可能会出问题
 	}
 	else 
 	{
@@ -436,6 +457,7 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 			endType ^= type10;
 		}
 	}
+
 	return true;
 }
 

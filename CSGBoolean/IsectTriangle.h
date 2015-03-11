@@ -11,10 +11,9 @@ namespace CSG
 	struct ISectTriangle;
 	struct ISVertexInfo;
 
-	typedef std::list<ISectTriangle>::iterator ISectTriItr;
+	typedef std::list<ISectTriangle>::iterator	ISectTriItr;
 	typedef std::list<Vec3d>::iterator			VertexItr;
-	typedef std::list<Vec3d>::const_iterator	cVertexItr;
-	typedef std::list<ISVertexInfo>::iterator	ISectVItr;
+	typedef std::list<ISVertexInfo>::iterator	ISVertexItr;
 
 	enum VertexPos 
 	{
@@ -30,61 +29,50 @@ namespace CSG
 
 	struct ISVertexInfo
 	{
-		VertexItr pos;
-		VertexPos type;
+		MPMesh::VertexHandle		pos;
+		ISVertexItr				next;
 
-		Relation *relation;
-
-		ISVertexInfo(unsigned i):
-			type(NONE)
-		{
-			relation = new Relation[i];
-			memset(relation, 0, i*sizeof(Relation));
-		}
-
-		~ISVertexInfo()	{delete [] relation;	}
-
+		ISVertexInfo(){}
+		~ISVertexInfo(){}
 	};
 
 	struct ISCutSeg
 	{
-		ISectVItr		start, end;
-		ISectTriItr		oppoTriangle;
+		ISVertexItr		start, end;
+		ISectTriangle*	oppoTriangle;
 	};
-
-	struct ISCutSegInfo
-	{
-		std::list<ISCutSeg> seg;	
-		int					meshID;
-	};
-
 
 	struct ISectTriangle
 	{
-		int					meshID;
+		MPMesh*				pMesh;
 		MPMesh::FaceHandle	face;
 
 		int mainIndex;
 		std::set<int> relationTestId;
 
+		ISVertexInfo				corner[3];
 		std::list<ISVertexInfo> vertices;
-		std::list<ISCutSegInfo>	segs;
+		std::list<ISCutSeg>		segs;
 		
 		GEOM_FADE2D::Fade_2D		*dtZone;
 
-		ISectTriangle():
-			mainIndex(-1), meshID(-1),
-			dtZone(nullptr)
-		{}
-
-		~ISectTriangle()	 {if (dtZone) delete dtZone;	}
+		ISectTriangle(MPMesh* mesh, MPMesh::FaceHandle f);
+		~ISectTriangle();
 	};
 	
 	struct ISectZone
 	{
-		std::list<Vec3d>				vertices; // include original and new vertices 
-		std::list<ISectTriangle>		triangles;
+		MPMesh mesh;
+		std::list<ISectTriangle*> triangles;
 	};
+	
+	void InitZone();
+	void ReleaseZone();
+	void Register(ISectTriangle*);
+	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec);
+	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr v);
+	void InsertSegment(ISectTriangle* tri, ISVertexItr v0, ISVertexItr v1, ISectTriangle* tri2);
+
 } // namespace CSG
 
 

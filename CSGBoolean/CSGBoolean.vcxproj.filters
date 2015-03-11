@@ -33,6 +33,9 @@
     <ClCompile Include="isect.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="IsectTriangle.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h">
