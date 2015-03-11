@@ -50,7 +50,7 @@ namespace CSG
 
                 pChild->Parent = root;
             }
-			Vec3d v0, v1, v2;
+			Vec3d *v0, *v1, *v2;
 
             for (auto &triTab: root->TriangleTable)
             {
@@ -71,21 +71,21 @@ namespace CSG
                     {
                         count = 0;
 						fvItr = pMesh->fv_iter(fhandle);
-                        v0 = pMesh->point(*fvItr);	fvItr++;
-                        v1 = pMesh->point(*fvItr);	fvItr++;
-                        v2 = pMesh->point(*fvItr);
+                        v0 = &pMesh->verticesList[fvItr->idx()];	fvItr++;
+                        v1 = &pMesh->verticesList[fvItr->idx()];	fvItr++;
+                        v2 = &pMesh->verticesList[fvItr->idx()];
                         auto &aabb = root->Child[j].BoundingBox;
 
-                        if (aabb.IsInBox_LORC(v0)) count++;
-                        if (aabb.IsInBox_LORC(v1)) count++;
-                        if (aabb.IsInBox_LORC(v2)) count++;
+                        if (aabb.IsInBox_LORC(*v0)) count++;
+                        if (aabb.IsInBox_LORC(*v1)) count++;
+                        if (aabb.IsInBox_LORC(*v2)) count++;
                         if (count > 0)
                         {
                             root->Child[j].TriangleTable[triTab.first].push_back(triangles[i]);
                             root->Child[j].TriangleCount++;
                             if (count == 3) break;
                         }
-                        else if(TriangleAABBIntersectTest(v0, v1, v2, aabb))
+                        else if(TriangleAABBIntersectTest(*v0, *v1, *v2, aabb))
                         {
                             root->Child[j].TriangleTable[triTab.first].push_back(triangles[i]);
                             root->Child[j].TriangleCount++;
@@ -233,9 +233,9 @@ namespace CSG
     {
 		Vec3d normal = pMesh->normal(triHandle);
 		auto fvItr = pMesh->fv_begin(triHandle);
-        Vec3d v0 = pMesh->point(*fvItr);	fvItr++;
-        Vec3d v1 = pMesh->point(*fvItr);	fvItr++;
-        Vec3d v2 = pMesh->point(*fvItr);
+        Vec3d &v0 = pMesh->verticesList[fvItr->idx()];	fvItr++;
+        Vec3d &v1 = pMesh->verticesList[fvItr->idx()];	fvItr++;
+        Vec3d &v2 = pMesh->verticesList[fvItr->idx()];
 
         if (PointWithPlane(normal, v0, rayInfo->pt) == PointWithPlane(normal, v0, rayInfo->et) )
             return 0;

@@ -14,7 +14,8 @@ namespace CSG
 	}
 
 	MPMesh::MPMesh(GS::BaseMesh* pMesh):
-        ID(-1), pOrigin(pMesh), bInverse(false)
+        ID(-1), pOrigin(pMesh), bInverse(false),
+		verticesList(nullptr)
     {
 		request_face_normals();
 		add_property(PointInOutTestPropHandle);
@@ -28,6 +29,7 @@ namespace CSG
 		remove_property(PointInOutTestPropHandle);
 		remove_property(SurfacePropHandle);
 		remove_property(VertexIndexPropHandle);
+		SAFE_RELEASE_ARRAY(verticesList);
     }
 
 	MPMesh* ConvertToMPMesh(GS::BaseMesh* pMesh)
@@ -37,9 +39,11 @@ namespace CSG
         int n = (int)pMesh->VertexCount();
         res->BBox.Clear();
 		MPMesh::VertexHandle vhandle;
+		res->verticesList = new Vec3d[n];
         for (int i = 0; i < n; i++)
 		{
-            vhandle = res->add_vertex(convert_double3(pMesh->Vertex(i).pos));
+			res->verticesList[i] = convert_double3(pMesh->Vertex(i).pos);
+            vhandle = res->add_vertex(res->verticesList[i]);
 			//res->property(res->PointInOutTestPropHandle, vhandle) = 0;
 			res->BBox.IncludePoint(res->point(vhandle));
 		}

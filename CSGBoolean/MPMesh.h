@@ -25,7 +25,7 @@ namespace CSG
 
 	struct MPMesh:public MPMeshKernel
 	{
-		MPMesh(GS::BaseMesh* pMesh);
+		MPMesh(GS::BaseMesh* pMesh = nullptr);
         ~MPMesh(void);
 
 		int  ID;
@@ -33,6 +33,7 @@ namespace CSG
 		AABBmp BBox;
 
         GS::BaseMesh* pOrigin;
+		Vec3d *verticesList;
 
 		OpenMesh::FPropHandleT<unsigned> PointInOutTestPropHandle; // 是否在内外测试中被检测过
 		OpenMesh::FPropHandleT<ISectTriangle*> SurfacePropHandle; // 是否属于相交三角形
