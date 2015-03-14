@@ -48,7 +48,7 @@ namespace CSG
 		MPMesh::FaceHandle	face;
 
 		int mainIndex;
-		std::set<int> relationTestId;
+		std::vector<int> relationTestId; // 有哪些折痕在这里
 
 		ISVertexItr				corner[3]; // point to the first three elements in [vertices] #WR#
 		std::list<ISVertexInfo> vertices;
@@ -59,19 +59,23 @@ namespace CSG
 		ISectTriangle(MPMesh* mesh, MPMesh::FaceHandle f);
 		~ISectTriangle();
 	};
-	
+
 	struct ISectZone
 	{
 		MPMesh mesh;
 		std::list<ISectTriangle*> triangles;
 	};
-	
+
 	void InitZone();
 	void ReleaseZone();
 	void Register(ISectTriangle*);
 	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec);
 	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr ref);
 	void InsertSegment(ISectTriangle* tri, ISVertexItr v0, ISVertexItr v1, ISectTriangle* tri2);
+
+	void ParsingFace(MPMesh*, MPMesh::FaceHandle, Relation*, CSGTree*);
+	bool CompareRelationSpace();
+	void GetRelationTable();
 
 } // namespace CSG
 

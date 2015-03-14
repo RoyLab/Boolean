@@ -78,6 +78,7 @@
     <ClCompile Include="isect.cpp" />
     <ClCompile Include="IsectTriangle.cpp" />
     <ClCompile Include="MPMesh.cpp" />
+    <ClCompile Include="Parsingface.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h" />

@@ -8,6 +8,8 @@
 #include "BinaryTree.h"
 #include "isect.h"
 #include "IsectTriangle.h"
+#include <queue>
+#include "CSGExprNode.h"
 
 
 #ifdef _DEBUG
@@ -225,6 +227,8 @@ namespace CSG
 
 	}
 
+	void FloodColoring(Octree* pOctree, CSGTree* pPosCSG);
+
 	static GS::BaseMesh* BooleanOperation2(GS::CSGExprNode* input, HANDLE stdoutput)
 	{
 		_output= stdoutput;
@@ -236,20 +240,14 @@ namespace CSG
 		CSGTree* pPosCSG = ConvertToPositiveTree(pCSGTree);
 		delete pCSGTree;
         DebugInfo("Convert", t0);
-
         Octree* pOctree = BuildOctree(arrMesh, nMesh);
         DebugInfo("BuildTree", t0);
-
 		InitZone();
-
 		ISectTest(pOctree);
         DebugInfo("ISectTest", t0);
-
 		RelationTest(pOctree);
         DebugInfo("RelationTest", t0);
-		//int i = 100000;
-		//while (i--)
-		//PolyhedralInclusionTest(Vec3d(0, 4, 0), pOctree, 0);
+		FloodColoring(pOctree, pPosCSG);
 
 		delete pOctree;
 		delete pPosCSG;
@@ -290,5 +288,167 @@ namespace CSG
             GetLeafNodes(&pNode->Child[i], leaves, NodeType);
     }
 
+	struct SeedInfo
+	{
+		std::queue<MPMesh::FaceHandle[2]> queue;
+		Relation *relation;
+
+		SeedInfo():relation(nullptr){}
+		~SeedInfo(){SAFE_RELEASE_ARRAY(relation);}
+	};
+
+	void FloodColoring(Octree* pOctree, CSGTree* pPosCSG)
+	{
+		MPMesh *pMesh;
+		std::queue<MPMesh::FaceHandle> faceQueue;
+		std::queue<SeedInfo> seedQueueList;
+		MPMesh::FaceHandle curFace, relatedFace;
+		MPMesh::FaceFaceIter ffItr;
+		Vec3d *v0, *v1, *v2;
+		Relation *curRelationTable, curRelation;
+		CSGTree* curTree;
+
+		SeedInfo** meshSeedInfo = new SeedInfo*[pOctree->nMesh];
+		memset(meshSeedInfo, 0, sizeof(SeedInfo)*pOctree->nMesh);
+		
+		for (unsigned i0 = 0; i0 < pOctree->nMesh; i0++)
+		{
+			pMesh = pOctree->pMesh[i0];
+			curFace = *pMesh->faces_begin();
+
+			meshSeedInfo[i0] = new SeedInfo;
+			meshSeedInfo[i0]->relation = new Relation[pOctree->nMesh];
+			memset(meshSeedInfo[i0]->relation, 0, sizeof(Relation)*pOctree->nMesh);
+
+			if (pMesh->property(pMesh->SurfacePropHandle, curFace))
+				for (auto iItr: pMesh->property(pMesh->SurfacePropHandle, curFace)->relationTestId)
+					meshSeedInfo[i0]->relation[iItr] = REL_NA;
+
+			GetCorners(pMesh, curFace, v0, v1, v2);
+			Vec3d bc = (*v0+*v1+*v2)/3.0;
+			for (unsigned i = 0; i < pOctree->nMesh; i++)
+			{
+				if (i == i0 || meshSeedInfo[i0]->relation[i] == REL_NA) continue;
+				meshSeedInfo[i0]->relation[i] = 
+					PolyhedralInclusionTest(bc, pOctree, i, pOctree->pMesh[i]->bInverse);
+			}
+
+			seedQueueList.push(*meshSeedInfo[i0]);
+			meshSeedInfo[i0]->relation = nullptr;
+
+			while (!seedQueueList.empty())
+			{
+				auto &seeds = seedQueueList.front();
+				while (!seeds.queue.empty())
+				{
+					while (1)
+					{
+						if (pMesh->property(pMesh->MarkPropHandle, seeds.queue.front()[1]) == 0)
+							break;
+						seeds.queue.pop();
+					}
+
+					curFace = seeds.queue.front()[1];
+					relatedFace = seeds.queue.front()[0];
+					faceQueue.push(curFace);
+					seeds.queue.pop();
+					GetRelationTable(curFace, relatedFace, seeds.relation, curRelationTable);
+					seedQueueList.emplace();
+					seedQueueList.back().relation = curRelationTable;
+					curTree = copy(pPosCSG);
+					curRelation = ParsingCSGTree(curRelationTable, n_rel, curTree);
+
+					if (!pMesh->property(pMesh->SurfacePropHandle, curFace)) // 简单模式
+					{
+						assert(curRelation != REL_UNKNOWN);
+						while (!faceQueue.empty())
+						{					
+							while (1)
+							{
+								if (pMesh->property(pMesh->MarkPropHandle, faceQueue.front()) != 2)
+									break;
+								faceQueue.pop();
+							}
+
+							curFace = faceQueue.front();
+							faceQueue.pop();
+							if (curRelation == REL_SAME) AddFaceToResult(pMesh, curFace);
+							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
+
+							// add neighbor
+							ffItr = pMesh->ff_iter(curFace);
+							int *markPtr;
+							for (int i = 0; i < 3; i++, ffItr++)
+							{
+								markPtr = &(pMesh->property(pMesh->MarkPropHandle, *ffItr));
+								if (*markPtr == 0)
+								{
+									if (!pMesh->property(pMesh->SurfacePropHandle, *ffItr))
+										faceQueue.push(*ffItr);
+									else
+									{
+										MPMesh::FaceHandle fh[2];
+										fh[0] = curFace;
+										fh[2] = *ffItr;
+										seedQueueList.back().queue.push(fh);
+									}
+									*markPtr = 1; // queued
+								}
+							}
+						}
+					}
+					else // 复合模式
+					{
+						while (!faceQueue.empty())
+						{					
+							while (1)
+							{
+								if (pMesh->property(pMesh->MarkPropHandle, faceQueue.front()) != 2)
+									break;
+								faceQueue.pop();
+							}
+
+							curFace = faceQueue.front();
+							faceQueue.pop();
+							switch (curRelation)
+							{
+							case REL_UNKNOWN:
+								ParsingFace(pMesh, curFace, curTree);
+								break;
+							case REL_SAME:
+								AddFaceToResult(pMesh, curFace);
+								break;
+							default:
+								break;
+							}
+							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
+
+							// add neighbor
+							ffItr = pMesh->ff_iter(curFace);
+							int *markPtr;
+							for (int i = 0; i < 3; i++, ffItr++)
+							{
+								markPtr = &(pMesh->property(pMesh->MarkPropHandle, *ffItr));
+								if (*markPtr == 0)
+								{
+									if (pMesh->property(pMesh->SurfacePropHandle, *ffItr) &&
+										CompareRelationSpace(pMesh, curFace, *ffItr))
+										faceQueue.push(*ffItr);
+									else
+									{
+										MPMesh::FaceHandle fh[2];
+										fh[0] = curFace;
+										fh[2] = *ffItr;
+										seedQueueList.back().queue.push(fh);
+									}
+									*markPtr = 1; // queued
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 }
 

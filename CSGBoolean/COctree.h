@@ -25,7 +25,8 @@ namespace CSG
         REL_INSIDE = 1,
         REL_OUTSIDE = 2,
         REL_SAME = 4,
-        REL_OPPOSITE = 8
+        REL_OPPOSITE = 8,
+		REL_NA = -1
     };
 
     struct DiffMeshInfo
