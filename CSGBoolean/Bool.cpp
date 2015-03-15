@@ -322,13 +322,13 @@ namespace CSG
 
 			if (pMesh->property(pMesh->SurfacePropHandle, curFace))
 				for (auto iItr: pMesh->property(pMesh->SurfacePropHandle, curFace)->relationTestId)
-					meshSeedInfo[i0]->relation[iItr] = REL_NA;
+					meshSeedInfo[i0]->relation[iItr] = REL_NOT_AVAILABLE;
 
 			GetCorners(pMesh, curFace, v0, v1, v2);
 			Vec3d bc = (*v0+*v1+*v2)/3.0;
 			for (unsigned i = 0; i < pOctree->nMesh; i++)
 			{
-				if (i == i0 || meshSeedInfo[i0]->relation[i] == REL_NA) continue;
+				if (i == i0 || meshSeedInfo[i0]->relation[i] == REL_NOT_AVAILABLE) continue;
 				meshSeedInfo[i0]->relation[i] = 
 					PolyhedralInclusionTest(bc, pOctree, i, pOctree->pMesh[i]->bInverse);
 			}
@@ -352,11 +352,11 @@ namespace CSG
 					relatedFace = seeds.queue.front()[0];
 					faceQueue.push(curFace);
 					seeds.queue.pop();
-					GetRelationTable(curFace, relatedFace, seeds.relation, curRelationTable);
+					GetRelationTable(pMesh, curFace, relatedFace, seeds.relation, pOctree->nMesh, curRelationTable);
 					seedQueueList.emplace();
 					seedQueueList.back().relation = curRelationTable;
 					curTree = copy(pPosCSG);
-					curRelation = ParsingCSGTree(curRelationTable, n_rel, curTree);
+					curRelation = ParsingCSGTree(curRelationTable, pOctree->nMesh, curTree);
 
 					if (!pMesh->property(pMesh->SurfacePropHandle, curFace)) // ¼òµ¥Ä£Ê½
 					{

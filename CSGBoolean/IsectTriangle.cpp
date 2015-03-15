@@ -6,10 +6,17 @@ namespace CSG
 {
 	ISectZone* ZONE;
 
+	void GetLocation(ISVertexInfo* info, Vec3d& vec)
+	{
+		while (!info->pos.is_valid()) info = &(*info->next);
+		vec = ZONE->mesh.point(info->pos);
+	}
+
 	ISectTriangle::ISectTriangle(MPMesh* mesh, MPMesh::FaceHandle f):
 		mainIndex(-1), pMesh(mesh), face(f),
 		dtZone(nullptr)
 	{
+		// 三个角点在vertices的最后三个
 		auto fvItr = pMesh->fv_begin(face);
 		ISVertexInfo info;
 		info.pos = *fvItr;
@@ -66,7 +73,6 @@ namespace CSG
 		while (!refcpy->pos.is_valid()) refcpy = refcpy->next;
 		return IsEqual(ZONE->mesh.point(refcpy->pos), vec);
 	}
-
 
 	bool IsVertexExisted(ISectTriangle* tri, Vec3d& vec, ISVertexItr& ref)
 	{
@@ -229,7 +235,7 @@ namespace CSG
 		seg.start = v0;
 		seg.end = v1;
 		seg.oppoTriangle = tri2;
-		tri->segs.push_back(seg);
+		tri->segs[tri2->pMesh->ID].push_back(seg);
 	}
 
 }

@@ -3,7 +3,7 @@
 #include <Fade_2D.h>
 #include "MPMesh.h"
 #include "BinaryTree.h"
-#include <set>
+#include <map>
 
 namespace CSG
 {
@@ -29,8 +29,9 @@ namespace CSG
 
 	struct ISVertexInfo
 	{
-		MPMesh::VertexHandle		pos;
-		ISVertexItr				next;
+		MPMesh::VertexHandle	 pos;
+		ISVertexItr	next;
+		int Id;
 
 		ISVertexInfo(){}
 		~ISVertexInfo(){}
@@ -46,13 +47,14 @@ namespace CSG
 	{
 		MPMesh*				pMesh;
 		MPMesh::FaceHandle	face;
+		BSP2D** bsp;
 
 		int mainIndex;
-		std::vector<int> relationTestId; // 有哪些折痕在这里
+		std::vector<int> relationTestId; // 有哪些折痕需要内外测试，对应ISVertexInfo中的relation
 
-		ISVertexItr				corner[3]; // point to the first three elements in [vertices] #WR#
+		ISVertexItr				corner[3]; // point to the last three elements in [vertices] #WR#
 		std::list<ISVertexInfo> vertices;
-		std::list<ISCutSeg>		segs;
+		std::map<int, std::list<ISCutSeg>> segs;
 		
 		GEOM_FADE2D::Fade_2D		*dtZone;
 
@@ -72,10 +74,13 @@ namespace CSG
 	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec);
 	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr ref);
 	void InsertSegment(ISectTriangle* tri, ISVertexItr v0, ISVertexItr v1, ISectTriangle* tri2);
+	void GetLocation(ISVertexInfo* info, Vec3d& vec);
 
-	void ParsingFace(MPMesh*, MPMesh::FaceHandle, Relation*, CSGTree*);
+	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const CSGTree*);
+	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output);
 	bool CompareRelationSpace();
-	void GetRelationTable();
+
+	extern ISectZone* ZONE;
 
 } // namespace CSG
 
