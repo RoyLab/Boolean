@@ -341,12 +341,13 @@ namespace CSG
 				auto &seeds = seedQueueList.front();
 				while (!seeds.queue.empty())
 				{
-					while (1)
+					while (!seeds.queue.empty())
 					{
 						if (pMesh->property(pMesh->MarkPropHandle, seeds.queue.front()[1]) == 0)
 							break;
 						seeds.queue.pop();
 					}
+					if (seeds.queue.empty()) break;
 
 					curFace = seeds.queue.front()[1];
 					relatedFace = seeds.queue.front()[0];

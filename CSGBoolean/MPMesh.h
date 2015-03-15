@@ -54,5 +54,13 @@ namespace CSG
 		v2 = &(pMesh->verticesList[fvItr->idx()]);
 	}
 
+	inline int TestNeighborIndex(MPMesh* pMesh, MPMesh::FaceHandle faceSeed, MPMesh::FaceHandle face)
+	{
+		auto ffItr = pMesh->ff_begin(faceSeed);
+		if (*ffItr == face) return 1;
+		if (*(++ffItr) == face) return 2;
+		if (*(++ffItr) == face) return 0;
+		else return -1;
+	}
 
 } // namespace CSG

@@ -10,6 +10,7 @@ namespace CSG
 	using OpenMesh::Vec3d;
 	struct ISectTriangle;
 	struct ISVertexInfo;
+	struct BSP2D;
 
 	typedef std::list<ISectTriangle>::iterator	ISectTriItr;
 	typedef std::list<Vec3d>::iterator			VertexItr;
@@ -43,18 +44,27 @@ namespace CSG
 		ISectTriangle*	oppoTriangle;
 	};
 
+	struct ISCutSegData
+	{
+		std::list<ISCutSeg> segs;
+		BSP2D* bsp;
+
+		ISCutSegData():bsp(0){}
+		~ISCutSegData(){SAFE_RELEASE(bsp);}
+	};
+
+
 	struct ISectTriangle
 	{
 		MPMesh*				pMesh;
 		MPMesh::FaceHandle	face;
-		BSP2D** bsp;
 
 		int mainIndex;
 		std::vector<int> relationTestId; // 有哪些折痕需要内外测试，对应ISVertexInfo中的relation
 
 		ISVertexItr				corner[3]; // point to the last three elements in [vertices] #WR#
 		std::list<ISVertexInfo> vertices;
-		std::map<int, std::list<ISCutSeg>> segs;
+		std::map<int, ISCutSegData> segs;
 		
 		GEOM_FADE2D::Fade_2D		*dtZone;
 
@@ -77,7 +87,8 @@ namespace CSG
 	void GetLocation(ISVertexInfo* info, Vec3d& vec);
 
 	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const CSGTree*);
-	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output);
+	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, 
+		MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output);
 	bool CompareRelationSpace();
 
 	extern ISectZone* ZONE;

@@ -84,6 +84,7 @@
     <ClInclude Include="AABB.h" />
     <ClInclude Include="AABBmp.h" />
     <ClInclude Include="Bool.h" />
+    <ClInclude Include="BSP2D.h" />
     <ClInclude Include="COctree.h" />
     <ClInclude Include="BinaryTree.h" />
     <ClInclude Include="CMesh.h" />

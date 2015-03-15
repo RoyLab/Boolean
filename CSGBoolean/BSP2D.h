@@ -3,7 +3,7 @@
 
 namespace GEOM_FADE2D
 {
-	struct Point2;
+	class Point2;
 }
 
 namespace CSG

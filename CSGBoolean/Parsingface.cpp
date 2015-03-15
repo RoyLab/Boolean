@@ -2,6 +2,7 @@
 #include "IsectTriangle.h"
 #include "BinaryTree.h"
 #include "BSP2D.h"
+#include "isect.h"
 #include <algorithm>
 
 namespace CSG
@@ -38,9 +39,9 @@ namespace CSG
 				auto &segs1 = triangle->segs[i];
 				auto &segs2 = triangle->segs[j];
 
-				for (auto segItr1 = segs1.begin(); segItr1 != segs1.end(); segItr1++)
+				for (auto segItr1 = segs1.segs.begin(); segItr1 != segs1.segs.end(); segItr1++)
 				{
-					for (auto segItr2 = segs2.begin(); segItr2 != segs2.end(); segItr2++)
+					for (auto segItr2 = segs2.segs.begin(); segItr2 != segs2.segs.end(); segItr2++)
 					{
 						if (SegInterSectionTest2D(*segItr1, *segItr2, index, &crossPoint))
 						{
@@ -78,8 +79,8 @@ namespace CSG
 			tmpSegList.push_back(tmpSeg);
 
 			auto &tmpSegs = triangle->segs[pair.first->oppoTriangle->pMesh->ID];
-			tmpSegs.erase(pair.first);
-			tmpSegs.emplace(tmpSegList.begin(), tmpSegList.end());
+			tmpSegs.segs.erase(pair.first);
+			tmpSegs.segs.emplace(tmpSegList.begin(), tmpSegList.end());
 			tmpSegList.clear();
 		}
 
@@ -95,15 +96,13 @@ namespace CSG
 		{
 			vertex->Id = count;
 			GetLocation(&*vertex, point3d[count]);
-			point[count].x =  point3d[count][(index+1)%3];
-			point[count].y =  point3d[count][(index+2)%3];
+			point[count].set(point3d[count][(index+1)%3], point3d[count][(index+2)%3]);
 			point[count].setCustomIndex(count);
 		}
 
 		// 建立 BSP 树空间
-		triangle->bsp = new BSP2D*[n_test];
-		for (unsigned i = 0; i < n_test; i++)
-			triangle->bsp[i] = BuildBSP2D(triangle, i);
+		for (auto &pair: triangle->segs)
+			pair.second.bsp = BuildBSP2D(triangle, pair.first);
 
 		// 建立约束条件
 		std::vector<Segment2> segList;
@@ -114,7 +113,7 @@ namespace CSG
 		{
 			testId = triangle->relationTestId[i];
 			auto& segs = triangle->segs[testId];
-			for (auto seg = segs.begin(); seg != segs.end(); seg++)
+			for (auto seg = segs.segs.begin(); seg != segs.segs.end(); seg++)
 			{
 				p0 = &point[seg->start->Id];
 				p1 = &point[seg->end->Id];
@@ -147,7 +146,7 @@ namespace CSG
 			{
 				if (tmpTree->Leaves.find(testId) != tmpTree->Leaves.end())
 				{
-					CompressCSGTree(tmpTree, testId, BSP2DInOutTest(triangle->bsp[i], &baryCenter2d));
+					CompressCSGTree(tmpTree, testId, BSP2DInOutTest(triangle->segs[testId].bsp, &baryCenter2d));
 					if (tmpTree->Leaves.size() <= 1)
 					{
 						if (tmpTree->Leaves.find(pMesh->ID) == tmpTree->Leaves.end()) break;
@@ -160,7 +159,8 @@ namespace CSG
 		}
 	}
 
-	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output)
+	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, MPMesh::FaceHandle seedFace, 
+		Relation* relationSeed, unsigned nMesh, Relation*& output)
 	{
 		// 分情况讨论： 子集，超集，混合集
 		// TO-DO: 共面的检测
@@ -177,18 +177,34 @@ namespace CSG
 		}
 		else
 		{
+			int index = TestNeighborIndex(pMesh, seedFace, curFace);
+			assert(index != -1);
+			Vec3d* v[3];
+			unsigned nv = triSeed->vertices.size();
+			GetCorners(pMesh, seedFace, v[0], v[1], v[2]); 
+			int a = (triSeed->mainIndex+1)%3;
+			int b = (triSeed->mainIndex+2)%3;
+			
+			Point2 p[3];
+			p[0].set((*v[0])[a], (*v[0])[b]);
+			p[1].set((*v[1])[a], (*v[1])[b]);
+			p[2].set((*v[2])[a], (*v[2])[b]);
+
+			a = (index+1)%3;
+			b = (index+2)%3;
+
+			Point2 testPoint;
+			testPoint.set(p[a].x()+p[b].x()-p[index].x(), p[a].y()+p[b].y()-p[index].y());
+
 			if (triCur)
 			{
 				for (auto& pair: triCur->segs)
 					output[pair.first] = REL_NOT_AVAILABLE; // available
 
-				Vec3d *v0, *v1, *v2;
-				GetCorners(pMesh, curFace, v0, v1, v2);
-				Vec3d baryCenter = (*v0+*v1+*v2)/3.0;
 				for (auto& pair: triSeed->segs)
 					if (output[pair.first] != REL_NOT_AVAILABLE)
 					{
-						BSP2DInOutTest
+						output[pair.first] = BSP2DInOutTest(pair.second.bsp, &testPoint);
 					}
 			}
 		}
@@ -196,9 +212,9 @@ namespace CSG
 
 	inline int FindMaxIndex(Vec3d& vec)
 	{
-		int a = fabs(vec[0]);
-		int b = fabs(vec[1]);
-		int c = fabs(vec[2]);
+		double a = fabs(vec[0]);
+		double b = fabs(vec[1]);
+		double c = fabs(vec[2]);
 
 		if (a >= b)
 		{
