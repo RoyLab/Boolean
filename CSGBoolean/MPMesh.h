@@ -2,6 +2,7 @@
 #include <OpenMesh\Core\Mesh\TriMesh_ArrayKernelT.hh>
 #include <typedefs.h>
 #include "AABBmp.h"
+#include <Fade_2D.h>
 
 namespace GS
 {

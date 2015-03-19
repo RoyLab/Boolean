@@ -10,8 +10,15 @@ namespace CSG
 	using namespace GEOM_FADE2D;
 	typedef std::list<ISCutSeg>::iterator ISCutSegItr;
 	int FindMaxIndex(Vec3d& vec);
+	void SortSegPoint(std::pair<const ISCutSegItr, std::list<ISVertexItr>>& pair, std::vector<TMP_VInfo>& infos);
+	void AddFaceToResult(GS::BaseMesh*, GEOM_FADE2D::Triangle2*, std::vector<TMP_VInfo>&);
 
-	void ParsingFace(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, const CSGTree* pTree)
+	inline bool operator<(const ISCutSegItr& v1, const ISCutSegItr& v2)
+	{
+		return &*v1 < &*v2;
+	}
+
+	void ParsingFace(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, const CSGTree* pTree, GS::BaseMesh* pResult)
 	{
 		// 树不为空，存在一个on的节点
 		ISectTriangle* triangle = pMesh->property(pMesh->SurfacePropHandle, faceHandle);
@@ -25,9 +32,31 @@ namespace CSG
 		// 取得有效的相交网格列表
 		std::sort(triangle->relationTestId.begin(), triangle->relationTestId.end());
 		Vec3d normal = pMesh->normal(faceHandle);
-		triangle->mainIndex = FindMaxIndex(normal);
-		unsigned index = triangle->mainIndex;
+		int mainAxis = FindMaxIndex(normal);
+		triangle->xi = (mainAxis+1)%3;
+		triangle->xi = (mainAxis+2)%3;
+
 		unsigned n_test = triangle->relationTestId.size();
+		unsigned n_vertices = triangle->vertices.size();
+
+		// 3D 转 2D 坐标
+		std::vector<TMP_VInfo> points;
+		points.reserve(n_vertices+5);
+		points.resize(n_vertices);
+		size_t count = 0;
+		for (auto vertex = triangle->vertices.begin();
+			vertex != triangle->vertices.end(); vertex++, count++)
+		{
+			vertex->Id = count;
+			GetLocation(&*vertex, points[count].p3);
+			points[count].p2.set(points[count].p3[triangle->xi], points[count].p3[triangle->yi]);
+			points[count].p2.setCustomIndex(count);
+			points[count].ptr = vertex;
+		}
+
+		// 建立 BSP 树空间
+		for (auto &pair: triangle->segs)
+			pair.second.bsp = BuildBSP2D(triangle, pair.first,points);
 
 		// 记录可能的二次相交点
 		std::map<ISCutSegItr, std::list<ISVertexItr>> crossRecord;
@@ -43,9 +72,14 @@ namespace CSG
 				{
 					for (auto segItr2 = segs2.segs.begin(); segItr2 != segs2.segs.end(); segItr2++)
 					{
-						if (SegInterSectionTest2D(*segItr1, *segItr2, index, &crossPoint))
+						if (SegIsectTest2D(*segItr1, *segItr2, points, crossPoint))
 						{
 							auto vItr = InsertPoint(triangle, INNER, crossPoint);
+							vItr->Id = points.size();
+							points.emplace_back();
+							points.back().p3 = crossPoint;
+							points.back().p2 = Point2(crossPoint[triangle->xi], crossPoint[triangle->yi]);
+							points.back().ptr = vItr;
 							crossRecord[segItr2].push_back(vItr);
 							crossRecord[segItr1].push_back(vItr);
 						}
@@ -59,7 +93,7 @@ namespace CSG
 		ISCutSeg tmpSeg;
 		for (auto& pair: crossRecord)
 		{
-			SortSegPoint(pair.first, pair.second);
+			SortSegPoint(pair, points);
 			tmpSeg.start = pair.first->start;
 			tmpSeg.end = *pair.second.begin();
 			tmpSegList.push_back(tmpSeg);
@@ -80,52 +114,31 @@ namespace CSG
 
 			auto &tmpSegs = triangle->segs[pair.first->oppoTriangle->pMesh->ID];
 			tmpSegs.segs.erase(pair.first);
-			tmpSegs.segs.emplace(tmpSegList.begin(), tmpSegList.end());
+			tmpSegs.segs.insert(tmpSegs.segs.end(), tmpSegList.begin(), tmpSegList.end());
 			tmpSegList.clear();
 		}
-
-
-		// 3D 转 2D 坐标
-		unsigned n_vertices = triangle->vertices.size();
-		GEOM_FADE2D::Point2* point = new GEOM_FADE2D::Point2[n_vertices];
-		Vec3d* point3d = new Vec3d[n_vertices];
-
-		unsigned count = 0;
-		for (auto vertex = triangle->vertices.begin();
-			vertex != triangle->vertices.end(); vertex++, count++)
-		{
-			vertex->Id = count;
-			GetLocation(&*vertex, point3d[count]);
-			point[count].set(point3d[count][(index+1)%3], point3d[count][(index+2)%3]);
-			point[count].setCustomIndex(count);
-		}
-
-		// 建立 BSP 树空间
-		for (auto &pair: triangle->segs)
-			pair.second.bsp = BuildBSP2D(triangle, pair.first);
 
 		// 建立约束条件
 		std::vector<Segment2> segList;
 		Point2 *p0, *p1;
 		unsigned testId;
-		Relation r0, r1;
 		for (unsigned i = 0; i < n_test; i++)
 		{
 			testId = triangle->relationTestId[i];
 			auto& segs = triangle->segs[testId];
 			for (auto seg = segs.segs.begin(); seg != segs.segs.end(); seg++)
 			{
-				p0 = &point[seg->start->Id];
-				p1 = &point[seg->end->Id];
+				p0 = &points[seg->start->Id].p2;
+				p1 = &points[seg->end->Id].p2;
 				segList.emplace_back(*p0, *p1);
 			}
 		}
 	
 		Fade_2D* dt = triangle->dtZone;
 		dt = new Fade_2D;
-		dt->insert(point[n_vertices-3]);
-		dt->insert(point[n_vertices-2]);
-		dt->insert(point[n_vertices-1]);
+		dt->insert(points[triangle->corner[0]->Id].p2);
+		dt->insert(points[triangle->corner[1]->Id].p2);
+		dt->insert(points[triangle->corner[2]->Id].p2);
 
 		dt->createConstraint(segList, GEOM_FADE2D::CIS_IGNORE_DELAUNAY);
 		dt->applyConstraintsAndZones();
@@ -136,7 +149,6 @@ namespace CSG
 		Point2 baryCenter2d;
 		CSGTree* tmpTree;
 		unsigned i;
-		Relation tmpRel;
 		for (auto triFrag: vAllTriangles)
 		{
 			baryCenter2d = triFrag->getBarycenter();
@@ -150,7 +162,7 @@ namespace CSG
 					if (tmpTree->Leaves.size() <= 1)
 					{
 						if (tmpTree->Leaves.find(pMesh->ID) == tmpTree->Leaves.end()) break;
-						else AddFaceToResult(triangle, triFrag);
+						else AddFaceToResult(pResult, triFrag, points);
 					}
 				}
 				i++;
@@ -182,8 +194,8 @@ namespace CSG
 			Vec3d* v[3];
 			unsigned nv = triSeed->vertices.size();
 			GetCorners(pMesh, seedFace, v[0], v[1], v[2]); 
-			int a = (triSeed->mainIndex+1)%3;
-			int b = (triSeed->mainIndex+2)%3;
+			int a = triSeed->xi;
+			int b = triSeed->yi;
 			
 			Point2 p[3];
 			p[0].set((*v[0])[a], (*v[0])[b]);
@@ -203,9 +215,7 @@ namespace CSG
 
 				for (auto& pair: triSeed->segs)
 					if (output[pair.first] != REL_NOT_AVAILABLE)
-					{
 						output[pair.first] = BSP2DInOutTest(pair.second.bsp, &testPoint);
-					}
 			}
 		}
 	}
@@ -228,4 +238,38 @@ namespace CSG
 		}
 	}
 
+	void SortSegPoint(std::pair<const ISCutSegItr, std::list<ISVertexItr>>& pair, std::vector<TMP_VInfo>& infos)
+	{
+		// 确定排序方法
+		auto dir = infos[pair.first->end->Id].p3 - infos[pair.first->start->Id].p3;
+		int maxIndex = FindMaxIndex(dir);
+		if (dir[maxIndex] > 0.0)
+		{
+			// from small to big
+			for (auto itri = pair.second.begin(); itri != pair.second.end(); itri++)
+			{
+				for (auto itrj = itri;; itrj++)
+				{
+					auto itrnext = itrj; itrnext++;
+					if (itrnext == pair.second.end()) break;
+
+					if (infos[(*itrj)->Id].p3[maxIndex] > infos[(*itrnext)->Id].p3[maxIndex])
+					{
+						auto tmp = *itrj;
+						*itrj = *itrnext;
+						*itrnext = tmp;
+					}
+
+				}
+			}
+		}
+	}
+
+	void AddFaceToResult(GS::BaseMesh*, GEOM_FADE2D::Triangle2*, std::vector<TMP_VInfo>&)
+	{
+
+	}
+
+	ISCutSegData::ISCutSegData():bsp(0){}
+	ISCutSegData::~ISCutSegData(){SAFE_RELEASE(bsp);}
 }

@@ -25,6 +25,7 @@ namespace CSG
     struct CSGTreeNode
     {
         BiNodeType Type;
+		Relation relation;
         CSGTreeNode *pLeft, *pRight, *Parent;
 
         MPMesh* pMesh;
@@ -46,6 +47,7 @@ namespace CSG
     CSGTree* ConvertCSGTree(GS::CSGExprNode* root, MPMesh*** arrMesh, int *nMes); // convert nodes.
 	CSGTree* ConvertToPositiveTree(const CSGTree* tree);
 	Relation CompressCSGTree(CSGTree* tree, unsigned Id, Relation rel);
+	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree* curTree);
 
     inline bool IsLeaf(CSGTreeNode* node) {return !(node->pLeft && node->pRight);}
     CSGTree* copy(const CSGTree* thiz);

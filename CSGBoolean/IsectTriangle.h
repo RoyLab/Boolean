@@ -8,10 +8,12 @@
 namespace CSG
 {
 	using OpenMesh::Vec3d;
+	using GEOM_FADE2D::Point2;
 	struct ISectTriangle;
 	struct ISVertexInfo;
 	struct BSP2D;
 
+	typedef Vec3d Line2D;
 	typedef std::list<ISectTriangle>::iterator	ISectTriItr;
 	typedef std::list<Vec3d>::iterator			VertexItr;
 	typedef std::list<ISVertexInfo>::iterator	ISVertexItr;
@@ -42,6 +44,7 @@ namespace CSG
 	{
 		ISVertexItr		start, end;
 		ISectTriangle*	oppoTriangle;
+		Line2D lineCoef;
 	};
 
 	struct ISCutSegData
@@ -49,8 +52,8 @@ namespace CSG
 		std::list<ISCutSeg> segs;
 		BSP2D* bsp;
 
-		ISCutSegData():bsp(0){}
-		~ISCutSegData(){SAFE_RELEASE(bsp);}
+		ISCutSegData();
+		~ISCutSegData();
 	};
 
 
@@ -59,7 +62,7 @@ namespace CSG
 		MPMesh*				pMesh;
 		MPMesh::FaceHandle	face;
 
-		int mainIndex;
+		int xi, yi;
 		std::vector<int> relationTestId; // 有哪些折痕需要内外测试，对应ISVertexInfo中的relation
 
 		ISVertexItr				corner[3]; // point to the last three elements in [vertices] #WR#
@@ -78,6 +81,14 @@ namespace CSG
 		std::list<ISectTriangle*> triangles;
 	};
 
+	struct TMP_VInfo
+	{
+		Point2 p2;
+		Vec3d p3;
+		ISVertexItr ptr;
+	};
+
+
 	void InitZone();
 	void ReleaseZone();
 	void Register(ISectTriangle*);
@@ -86,7 +97,7 @@ namespace CSG
 	void InsertSegment(ISectTriangle* tri, ISVertexItr v0, ISVertexItr v1, ISectTriangle* tri2);
 	void GetLocation(ISVertexInfo* info, Vec3d& vec);
 
-	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const CSGTree*);
+	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const CSGTree*, GS::BaseMesh*);
 	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, 
 		MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output);
 	bool CompareRelationSpace();

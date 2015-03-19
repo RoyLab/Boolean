@@ -22,6 +22,7 @@
 namespace CSG
 {
 	CSGTreeNode::CSGTreeNode():
+		relation(REL_UNKNOWN),
 		Type(TYPE_UNKNOWN), Parent(0),
 		pLeft(0), pRight(0), pMesh(0), 
 		bInverse(false)
@@ -378,6 +379,159 @@ namespace CSG
 
 		return REL_UNKNOWN;
 	}
+
+	static Relation CompressCSGNodeIteration(CSGTreeNode*& root)
+	{
+		if (IsLeaf(root)) return root->relation;
+
+		Relation rRight, rLeft;
+		rRight = CompressCSGNodeIteration(root->pRight);
+
+		if (root->Type == TYPE_UNION)
+		{
+			if (rRight == REL_INSIDE)
+			{
+				delete root;
+				root = nullptr;
+				return REL_INSIDE;
+			}
+			else if (rRight == REL_OUTSIDE)
+			{
+				delete root->pRight;
+				auto tmp = root;
+				root = root->pLeft;
+				
+				tmp->pLeft = nullptr;
+				tmp->pRight = nullptr;
+				delete tmp;
+
+				return CompressCSGNodeIteration(root);
+			}
+		}
+#ifdef _DEBUG
+		else if (root->Type == TYPE_INTERSECT)
+#else
+		else
+#endif
+		{
+			if (rRight == REL_OUTSIDE)
+			{
+				delete root;
+				root = nullptr;
+				return REL_OUTSIDE;
+			}
+			else if (rRight == REL_INSIDE)
+			{
+				delete root->pRight;
+				auto tmp = root;
+				root = root->pLeft;
+				
+				tmp->pLeft = nullptr;
+				tmp->pRight = nullptr;
+				delete tmp;
+
+				return CompressCSGNodeIteration(root);
+			}
+		}
+#ifdef _DEBUG
+		else assert(0);
+#endif
+
+		rLeft = CompressCSGNodeIteration(root->pLeft);
+		if (root->Type == TYPE_UNION)
+		{
+			if (rLeft == REL_INSIDE)
+			{
+				delete root;
+				root = nullptr;
+				return REL_INSIDE;
+			}
+			else if (rLeft == REL_OUTSIDE)
+			{
+				delete root->pLeft;
+				auto tmp = root;
+				root = root->pRight;
+				
+				tmp->pLeft = nullptr;
+				tmp->pRight = nullptr;
+				delete tmp;
+				return rRight;
+			}
+		}
+#ifdef _DEBUG
+		else if (root->Type == TYPE_INTERSECT)
+#else
+		else
+#endif
+		{
+			if (rLeft == REL_OUTSIDE)
+			{
+				delete root;
+				root = nullptr;
+				return REL_OUTSIDE;
+			}
+			else if (rLeft == REL_INSIDE)
+			{
+				delete root->pLeft;
+				auto tmp = root;
+				root = root->pRight;
+				
+				tmp->pLeft = nullptr;
+				tmp->pRight = nullptr;
+				delete tmp;
+				return rRight;
+			}
+		}
+#ifdef _DEBUG
+		else assert(0);
+#endif
+
+		// TO DO: if no-one is outside or inside
+	}
+
+	static inline Relation CompressCSGNode(CSGTreeNode* root)
+	{
+		CSGTreeNode* parent = root->Parent;
+		root->Parent = nullptr;
+		Relation res = CompressCSGNodeIteration(root);
+		root->Parent = parent;
+		return res;
+	}
+
+	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree* curTree)
+	{
+		for (auto& pair: curTree->Leaves)
+			pair.second->relation = tab[pair.first];
+
+		auto res =  curTree->Leaves.find(pMesh->ID);
+		if (res == curTree->Leaves.end()) assert(0);
+		CSGTreeNode *seed = res->second, *tmp, *comp;
+		int checkRel;
+		while (seed->Parent)
+		{
+			// T∩N⇒N,  F∪N⇒N, F∩N⇒F, and T∪N⇒T
+			if (seed->Parent->Type == TYPE_UNION)
+				checkRel = REL_OUTSIDE;
+			else
+#ifdef _DEBUG
+				if (seed->Parent->Type == TYPE_INTERSECT)
+#endif
+				checkRel = REL_INSIDE;
+#ifdef _DEBUG
+				else assert(0);
+#endif
+			if (LeftOrRight(seed) < 0)
+			{
+				comp = seed->Parent->pRight;
+				checkRel ^= REL_SAME;
+			}
+			else comp = seed->Parent->pLeft;
+			
+			if (!(checkRel & CompressCSGNode(comp))) break;
+			seed = seed->Parent;
+		}
+	}
+
 
 }  // namespace CSG
 

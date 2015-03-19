@@ -13,7 +13,7 @@ namespace CSG
 	}
 
 	ISectTriangle::ISectTriangle(MPMesh* mesh, MPMesh::FaceHandle f):
-		mainIndex(-1), pMesh(mesh), face(f),
+		xi(-1), yi(-1), pMesh(mesh), face(f),
 		dtZone(nullptr)
 	{
 		// 三个角点在vertices的最后三个

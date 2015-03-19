@@ -229,6 +229,8 @@ namespace CSG
 
 	void FloodColoring(Octree* pOctree, CSGTree* pPosCSG);
 
+	GS::BaseMesh* result = new GS::BaseMesh;
+
 	static GS::BaseMesh* BooleanOperation2(GS::CSGExprNode* input, HANDLE stdoutput)
 	{
 		_output= stdoutput;
@@ -297,6 +299,42 @@ namespace CSG
 		~SeedInfo(){SAFE_RELEASE_ARRAY(relation);}
 	};
 
+	bool CompareRelationSpace(ISectTriangle* triSeed, ISectTriangle* triCur)
+	{
+		assert(triSeed);
+		if (!triCur)
+		{
+			if (triSeed->relationTestId.size()) return true;
+			else return false;
+		}
+
+		// 首先相交集必须是子集，然后relationTest必须相同
+		auto end = triCur->segs.end();
+		for (auto triId: triSeed->relationTestId)
+		{
+			if (triCur->segs.find(triId) == end) return false;
+		}
+
+		end = triSeed->segs.end();
+		for (auto &pair: triCur->segs)
+		{
+			if (triSeed->segs.find(pair.first) == end) return false;
+		}
+
+		return true;
+	}
+
+	static void AddTriangle(MPMesh* pMesh, MPMesh::FaceHandle face)
+    {
+		GS::double3 v[3];
+		Vec3d *v0, *v1, *v2;
+		GetCorners(pMesh, face, v0, v1, v2);
+		v[0] = Vec3dToDouble3(*v0);
+		v[1] = Vec3dToDouble3(*v1);
+		v[2] = Vec3dToDouble3(*v2);
+		result->AddTriangle(v);
+    }
+
 	void FloodColoring(Octree* pOctree, CSGTree* pPosCSG)
 	{
 		MPMesh *pMesh;
@@ -357,7 +395,7 @@ namespace CSG
 					seedQueueList.emplace();
 					seedQueueList.back().relation = curRelationTable;
 					curTree = copy(pPosCSG);
-					curRelation = ParsingCSGTree(curRelationTable, pOctree->nMesh, curTree);
+					curRelation = ParsingCSGTree(pMesh, curRelationTable, pOctree->nMesh, curTree);
 
 					if (!pMesh->property(pMesh->SurfacePropHandle, curFace)) // 简单模式
 					{
@@ -373,7 +411,7 @@ namespace CSG
 
 							curFace = faceQueue.front();
 							faceQueue.pop();
-							if (curRelation == REL_SAME) AddFaceToResult(pMesh, curFace);
+							if (curRelation == REL_SAME) AddTriangle(pMesh, curFace);
 							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
 
 							// add neighbor
@@ -417,7 +455,7 @@ namespace CSG
 								ParsingFace(pMesh, curFace, curTree);
 								break;
 							case REL_SAME:
-								AddFaceToResult(pMesh, curFace);
+								AddTriangle(pMesh, curFace);
 								break;
 							default:
 								break;
@@ -432,8 +470,8 @@ namespace CSG
 								markPtr = &(pMesh->property(pMesh->MarkPropHandle, *ffItr));
 								if (*markPtr == 0)
 								{
-									if (pMesh->property(pMesh->SurfacePropHandle, *ffItr) &&
-										CompareRelationSpace(pMesh, curFace, *ffItr))
+									auto &surface = pMesh->property(pMesh->SurfacePropHandle, curFace);
+									if (surface && CompareRelationSpace(surface, pMesh->property(pMesh->SurfacePropHandle, *ffItr)))
 										faceQueue.push(*ffItr);
 									else
 									{

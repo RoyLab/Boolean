@@ -21,6 +21,7 @@ namespace CSG
 		add_property(PointInOutTestPropHandle);
 		add_property(SurfacePropHandle);
 		add_property(VertexIndexPropHandle);
+		add_property(MarkPropHandle);
     }
 
     MPMesh::~MPMesh(void)
@@ -29,6 +30,7 @@ namespace CSG
 		remove_property(PointInOutTestPropHandle);
 		remove_property(SurfacePropHandle);
 		remove_property(VertexIndexPropHandle);
+		remove_property(MarkPropHandle);
 		SAFE_RELEASE_ARRAY(verticesList);
     }
 
