@@ -287,8 +287,8 @@ static inline int sort2(P& a, P& b)
 	return 0;
 }
 
-/* return: 1 means isect with line segment; 0 means no isect; -1 means isect with point */
-bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 
+
+int TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 
 							const Vec3d& u0, const Vec3d& u1, const Vec3d& u2, const Vec3d& nu,
 							int& startType, int& endType, Vec3d& start, Vec3d& end)
 {
@@ -304,7 +304,8 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 	GS::NormalDistToSign(du, sdu);
 
 	if ((sdu[0] == sdu[1]) && (sdu[1] == sdu[2]))
-		return false; 
+		if (sdu[0] = 0) return 0;
+		else return -1; 
 
 	double d2=-dot(nu, u0);
 	double dv[3];
@@ -314,7 +315,8 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 	int sdv[3];
 	GS::NormalDistToSign(dv, sdv);
 	if ((sdv[0] == sdv[1]) && (sdv[1] == sdv[2]))
-		return false;
+		if (sdu[0] = 0) return 0;
+		else return -1; 
 
 	/* compute direction of intersection line */
 	Vec3d LineDir = cross(nv, nu);
@@ -346,7 +348,7 @@ bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, cons
 	int smallest1 = sort2(isect1[0],isect1[1]);
 	int smallest2 = sort2(isect2[0],isect2[1]);
 	if(isect1[1]<isect2[0] || isect2[1]<isect1[0]) // 要不要用epsf?
-		return false;
+		return -1;
 
 	/* at this point, we know that the triangles intersect */
 	double dstart = isect1[0] - isect2[0];

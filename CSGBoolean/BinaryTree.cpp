@@ -487,6 +487,8 @@ namespace CSG
 #endif
 
 		// TO DO: if no-one is outside or inside
+		// Suppose we do not have on and oppo relation
+		return REL_NOT_AVAILABLE;
 	}
 
 	static inline Relation CompressCSGNode(CSGTreeNode* root)
@@ -498,15 +500,17 @@ namespace CSG
 		return res;
 	}
 
-	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree* curTree)
+	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree*& curTree)
 	{
 		for (auto& pair: curTree->Leaves)
 			pair.second->relation = tab[pair.first];
 
 		auto res =  curTree->Leaves.find(pMesh->ID);
 		if (res == curTree->Leaves.end()) assert(0);
-		CSGTreeNode *seed = res->second, *tmp, *comp;
+		CSGTreeNode *seed = res->second, *comp;
 		int checkRel;
+		bool pass = true;
+		bool simple = true;
 		while (seed->Parent)
 		{
 			// T∩N⇒N,  F∪N⇒N, F∩N⇒F, and T∪N⇒T
@@ -526,10 +530,20 @@ namespace CSG
 				checkRel ^= REL_SAME;
 			}
 			else comp = seed->Parent->pLeft;
-			
-			if (!(checkRel & CompressCSGNode(comp))) break;
+			Relation resRel = CompressCSGNode(comp);
+			if (!(checkRel & resRel)) // 如果不能确定，则返回not available (0xffffffff)
+			{
+				pass = false;
+				break;
+			}
+			if (resRel == REL_NOT_AVAILABLE) simple = false;
+
 			seed = seed->Parent;
 		}
+
+		if (!simple) return REL_NOT_AVAILABLE;
+		if (pass) return REL_SAME;
+		else return REL_INSIDE; //也有可能是OutSide
 	}
 
 

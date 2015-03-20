@@ -6,9 +6,8 @@
 
 namespace CSG
 {
-#define CALC_DISTANCE(ds, de, splitCoef, start, end)\
-			(ds) = (splitCoef)[0]*(start).x()+(splitCoef)[1]*(start).y()+(splitCoef)[2];\
-			(de) = (splitCoef)[0]*(end).x()+(splitCoef)[1]*(end).y()+(splitCoef)[2]
+#define CALC_DISTANCE(d, splitCoef, point)\
+			(d) = (splitCoef)[0]*(point).x()+(splitCoef)[1]*(point).y()+(splitCoef)[2]
 
 	// 通过向量的方向来划分空间
 	// 向量逆时针转90度为法向方向
@@ -35,7 +34,8 @@ namespace CSG
 		BSPSeg tmpSeg;
 		for (;cur != end; cur++)
 		{
-			CALC_DISTANCE(ds, de, splitCoef, cur->start, cur->end);
+			CALC_DISTANCE(ds, splitCoef, cur->start);
+			CALC_DISTANCE(de, splitCoef, cur->start);
 			if (ds*de < 0.0)
 			{
 				nx = cur->start.x()*de/(de-ds)+cur->end.x()*ds/(ds-de);
@@ -93,6 +93,7 @@ namespace CSG
 
 		if (rigtSegs.size()) root->rightTree = BuildBSP2DNode(rigtSegs);
 		else root->rightTree = new BSP2D(BSP2D::OUT);
+		return root;
 	}
 
 	BSP2D* BuildBSP2D(ISectTriangle* tri, unsigned index, std::vector<TMP_VInfo>& infos)
@@ -110,7 +111,7 @@ namespace CSG
 			segments.push_back(tmpSeg);
 		}
 
-		BSP2D* root = BuildBSP2DNode(segments);
+		return BuildBSP2DNode(segments);
 	}
 
 	bool SegIsectTest2D(ISCutSeg& seg1, ISCutSeg& seg2, std::vector<TMP_VInfo>& infos, Vec3d& output)
@@ -120,15 +121,40 @@ namespace CSG
 
 		ps1 = &(infos[seg1.start->Id].p2);
 		pe1 = &(infos[seg1.end->Id].p2);
-		CALC_DISTANCE(ds1, de1, seg2.lineCoef, *ps1, *pe1);
+		CALC_DISTANCE(ds1, seg2.lineCoef, *ps1);
+		CALC_DISTANCE(de1, seg2.lineCoef, *pe1);
 		if (ds1*de1 >= 0.0) return false;
 
 		ps2 = &(infos[seg2.start->Id].p2);
 		pe2 = &(infos[seg2.end->Id].p2);
-		CALC_DISTANCE(ds2, de2, seg1.lineCoef, *ps2, *pe2);
+		CALC_DISTANCE(ds2, seg2.lineCoef, *ps2);
+		CALC_DISTANCE(de2, seg2.lineCoef, *pe2);
 		if (ds2*de2 >= 0.0) return false;
 
 		output = infos[seg1.start->Id].p3*de1/(de1-ds1)+infos[seg1.end->Id].p3*ds1/(ds1-de1);
 		return true;
 	}
+	
+	Relation BSP2DInOutTest(const BSP2D* bsp, GEOM_FADE2D::Point2* point)
+	{
+		switch (bsp->type)
+		{
+		case BSP2D::NA:
+			{
+				double d;
+				CALC_DISTANCE(d, bsp->line, *point);
+				if (fabs(d) < EPSF) return REL_SAME;
+				if (d < 0.0) return BSP2DInOutTest(bsp->rightTree, point);
+				else return BSP2DInOutTest(bsp->leftTree, point);
+			}
+			break;
+		case BSP2D::IN: return REL_INSIDE;
+		case BSP2D::OUT: return REL_OUTSIDE;
+		default:
+			assert(0);
+			return REL_UNKNOWN;
+			break;
+		}
+	}
+
 }

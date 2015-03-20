@@ -21,13 +21,13 @@ namespace CSG
 	enum VertexPos 
 	{
 		NONE =   -1, 
+		INNER  = 0x00,
 		EDGE_0 = 0x01, 
 		EDGE_1 = 0x02, 
-		EDGE_2 = 0x04, 
+		EDGE_2 = 0x04,
 		VER_0  = 0x08, 
 		VER_1  = 0x10, 
 		VER_2  = 0x20, 
-		INNER  = 0x00,
 	};
 
 	struct ISVertexInfo
@@ -56,20 +56,31 @@ namespace CSG
 		~ISCutSegData();
 	};
 
+	struct CoplanarPlane
+	{
+		MPMesh* pMesh;
+		MPMesh::FaceHandle faceHandle;
+
+		CoplanarPlane(MPMesh* mesh, MPMesh::FaceHandle fh):
+			pMesh(mesh), faceHandle(fh){}
+
+		bool operator==(const CoplanarPlane& tri){return (tri.faceHandle == faceHandle && tri.pMesh == pMesh);}
+	};
 
 	struct ISectTriangle
 	{
+		std::list<ISVertexInfo> vertices;
+		std::map<int, ISCutSegData> segs;
+		std::vector<CoplanarPlane> coplanarTris;
+		//std::map<int, std::vector<MPMesh::FaceHandle>> isecTris;
+
 		MPMesh*				pMesh;
 		MPMesh::FaceHandle	face;
+		ISVertexItr			corner[3]; // point to the last three elements in [vertices] #WR#
 
 		int xi, yi;
 		std::vector<int> relationTestId; // 有哪些折痕需要内外测试，对应ISVertexInfo中的relation
-
-		ISVertexItr				corner[3]; // point to the last three elements in [vertices] #WR#
-		std::list<ISVertexInfo> vertices;
-		std::map<int, ISCutSegData> segs;
-		
-		GEOM_FADE2D::Fade_2D		*dtZone;
+		GEOM_FADE2D::Fade_2D	 *dtZone;
 
 		ISectTriangle(MPMesh* mesh, MPMesh::FaceHandle f);
 		~ISectTriangle();
@@ -92,8 +103,8 @@ namespace CSG
 	void InitZone();
 	void ReleaseZone();
 	void Register(ISectTriangle*);
-	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec);
-	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr ref);
+	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec, bool isMulti = false);
+	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr ref, bool isMulti = false);
 	void InsertSegment(ISectTriangle* tri, ISVertexItr v0, ISVertexItr v1, ISectTriangle* tri2);
 	void GetLocation(ISVertexInfo* info, Vec3d& vec);
 

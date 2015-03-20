@@ -15,7 +15,9 @@ namespace CSG
 	}
 
 	bool TriangleAABBIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const AABBmp& bbox);
-	bool TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 
+
+	// return: no isect(-1), coplanar(0), isect(1)
+	int TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const Vec3d& nv, 
 							 const Vec3d& u0, const Vec3d& u1, const Vec3d& u2, const Vec3d& nu,
 							 int& startType, int& endType, Vec3d& start, Vec3d& end);
 

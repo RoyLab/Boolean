@@ -77,6 +77,7 @@ namespace CSG
 	bool IsVertexExisted(ISectTriangle* tri, Vec3d& vec, ISVertexItr& ref)
 	{
 		// we do not check if it is a corner point #WR#
+		// 但是，如果这个ref本身就在这个里面，那么问题就来了
 		// 因为所有的插入点都是在前面的，所以不用检查到最后一个：a, b, c, d, v0, v1, v2.
 		const auto end = tri->corner[0];
 		for (auto itr = tri->vertices.begin(); itr != end; itr++)
@@ -90,19 +91,10 @@ namespace CSG
 		return false;
 	}
 
-	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec)
+	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, Vec3d& vec, bool isMulti)
 	{
-		assert(pos >= INNER && pos <= VER_2);
-
 		ISVertexItr output;
 		if (pos == INNER)
-		{
-			ISVertexInfo info;
-			info.pos = ZONE->mesh.add_vertex(vec);
-			tri->vertices.push_front(info);
-			output = tri->vertices.begin();
-		}
-		else if (pos <= EDGE_2)
 		{
 			if (!IsVertexExisted(tri, vec, output))
 			{
@@ -111,27 +103,41 @@ namespace CSG
 				tri->vertices.push_front(info);
 				output = tri->vertices.begin();
 			}
-
+		}
+		else if (pos <= EDGE_2)
+		{
 			auto mesh = tri->pMesh;
 			auto ffItr = mesh->ff_begin(tri->face);
 			switch (pos)
 			{
 			case CSG::EDGE_0:
 				ffItr ++;
+				ffItr ++;
 				break;
 			case CSG::EDGE_1:
-				ffItr ++;
-				ffItr ++;
 				break;
 			case CSG::EDGE_2:
+				ffItr ++;
 				break;
 			default: 
 				assert(0);
 			}
 
 			ISectTriangle*& other = mesh->property(mesh->SurfacePropHandle, *ffItr);
+#ifdef _DEBUG_
+			auto fvItr = mesh->fv_begin(tri->face);
+			if (pos == EDGE_1) fvItr++;
+			if (pos == EDGE_2) {fvItr++; fvItr++;}
+			
+			auto f0 = *fvItr;
+			fvItr = mesh->fv_begin(*ffItr);
+			assert(*fvItr != f0); fvItr++;
+			assert(*fvItr != f0); fvItr++;
+			assert(*fvItr != f0);
+#endif
 			if (!other) other = new ISectTriangle(mesh, *ffItr);
-			InsertPoint(other, INNER, output);
+			output = InsertPoint(other, INNER, vec);
+			InsertPoint(tri, INNER, output);
 		}
 		else
 		{
@@ -150,26 +156,25 @@ namespace CSG
 			}
 		}
 
-		while (!output->pos.is_valid()) output = output->next;
+		int count = 0;
+		while (!output->pos.is_valid())
+		{
+			count++;
+			output = output->next;
+		}
 		return output;
 	}
 
-	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr ref)
+	ISVertexItr InsertPoint(ISectTriangle* tri, VertexPos pos, ISVertexItr ref, bool isMulti)
 	{
-		assert(pos >= INNER && pos <= VER_2);
-		//assert(ref->pos.is_valid());
+		// 追溯到最源头的迭代器
 		while (!ref->pos.is_valid()) ref = ref->next;
 
 		Vec3d vec = ZONE->mesh.point(ref->pos);
-		ISVertexItr output;
+		ISVertexItr output = ref;
 		ISVertexInfo info;
 		info.next = ref;
 		if (pos == INNER)
-		{
-			tri->vertices.push_front(info);
-			output = tri->vertices.begin();
-		}
-		else if (pos <= EDGE_2)
 		{
 			if (!IsVertexExisted(tri, vec, output))
 			{
@@ -178,30 +183,36 @@ namespace CSG
 			}
 			else
 			{
-				output->pos.reset();
-				output->next = ref;
+				if (!output->pos.is_valid() || output->pos != ref->pos)
+				{
+					output->pos.reset();
+					output->next = ref;
+				}
 			}
-
+		}
+		else if (pos <= EDGE_2)
+		{
 			auto mesh = tri->pMesh;
 			auto ffItr = mesh->ff_begin(tri->face);
 			switch (pos)
 			{
 			case CSG::EDGE_0:
 				ffItr ++;
+				ffItr ++;
 				break;
 			case CSG::EDGE_1:
-				ffItr ++;
-				ffItr ++;
 				break;
 			case CSG::EDGE_2:
+				ffItr ++;
 				break;
-			default: 
+			default:
 				assert(0);
 			}
 
 			ISectTriangle*& other = mesh->property(mesh->SurfacePropHandle, *ffItr);
 			if (!other) other = new ISectTriangle(mesh, *ffItr);
 			InsertPoint(other, INNER, ref);
+			InsertPoint(tri, INNER, ref);
 		}
 		else
 		{
@@ -209,16 +220,19 @@ namespace CSG
 			switch (pos)
 			{
 			case CSG::VER_0:
+				if (tri->corner[0]->pos == ref->pos) break;
 				tri->corner[0]->pos.reset();
 				tri->corner[0]->next = ref;
 				output = tri->corner[0];
 				break;
 			case CSG::VER_1:
+				if (tri->corner[1]->pos == ref->pos) break;
 				tri->corner[1]->pos.reset();
 				tri->corner[1]->next = ref;
 				output = tri->corner[1];
 				break;
 			case CSG::VER_2:
+				if (tri->corner[2]->pos == ref->pos) break;
 				tri->corner[2]->pos.reset();
 				tri->corner[2]->next = ref;
 				output = tri->corner[2];
@@ -235,7 +249,7 @@ namespace CSG
 		seg.start = v0;
 		seg.end = v1;
 		seg.oppoTriangle = tri2;
-		tri->segs[tri2->pMesh->ID].push_back(seg);
+		tri->segs[tri2->pMesh->ID].segs.push_back(seg);
 	}
 
 }

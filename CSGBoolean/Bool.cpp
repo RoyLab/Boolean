@@ -10,6 +10,7 @@
 #include "IsectTriangle.h"
 #include <queue>
 #include "CSGExprNode.h"
+#include "configure.h"
 
 
 #ifdef _DEBUG
@@ -21,6 +22,8 @@
 
 namespace CSG
 {
+	extern ISectZone* ZONE;
+
 	HANDLE _output;
 	clock_t t0;
 
@@ -69,72 +72,13 @@ namespace CSG
 		RelationTest(pOctree->Root, pOctree, relmap);
 	}
 
-	/*
-	static void TagNode(OctreeNode* root, const CSGTree* last)
-	{
-		const CSGTree* cur(nullptr);
-		bool isMemAllocated = false;
-		Relation curRel = REL_UNKNOWN;
-
-		if (last)
-		{
-			if (root->DiffMeshIndex.size())
-			{
-				// compress with in/out info, create a image to cur
-				isMemAllocated = true;
-				CSGTree* tmpTree = copy(last);
-				for (auto &pair: root->DiffMeshIndex)
-				{
-					curRel = CompressCSGTree(tmpTree, pair.ID, pair.Rela);
-					if (curRel != REL_UNKNOWN)
-						break;
-				}
-				cur = tmpTree;
-			}
-			else cur = last;
-		}
-		
-		if (IsLeaf(root))
-		{
-			if (root->Type == NODE_SIMPLE)
-			{
-				root->pRelationData = new SimpleData(false);
-
-				if (cur && cur->Leaves.size() == 1)
-					*(SimpleData*)(root->pRelationData) = true;
-
-				assert(!(cur && cur->Leaves.size() > 1));
-			}
-			else root->pRelationData = copy(cur);
-		}
-		else
-		{
-			if (curRel != REL_UNKNOWN)
-			{
-				for (unsigned i = 0; i < 8; i++)
-					TagNode(&root->Child[i], 0);
-			}
-			else
-			{
-				for (unsigned i = 0; i < 8; i++)
-					TagNode(&root->Child[i], cur);
-			}
-		}
-
-		if (isMemAllocated) delete cur; // !! cur is a const pointer
-	}
-	
-	static void TagLeaves(Octree* pOctree, CSGTree* pCSG)
-	{
-		TagNode(pOctree->Root, pCSG);
-	}*/
-
 	void ISectTest(Octree* pOctree)
 	{
 		assert(pOctree);
 		std::list<OctreeNode*> leaves;
 		GetLeafNodes(pOctree->Root, leaves, NODE_COMPOUND);
 
+		std::map<GS::IndexPair, std::set<GS::IndexPair>> antiOverlapMap;
 		for (auto leaf: leaves)
 		{
 			auto itr = leaf->TriangleTable.begin();
@@ -145,12 +89,13 @@ namespace CSG
 			MPMesh::FaceHandle tri1, tri2;
 			Vec3d *v0,*v1,*v2, nv,*u0,*u1,*u2,nu,start,end;
 			MPMesh::FVIter fvItr;
-			bool isISect;
+			int isISect;
 			int startT(0), endT(0);
 			ISectTriangle **si=nullptr, **sj=nullptr;
 			VertexPos startiT, startjT, endiT, endjT;
 			ISVertexItr vP1, vP2;
 
+			int meshId[2];
 			for (; itr != iEnd; ++itr)
 			{
 				itr2 = itr;
@@ -163,12 +108,24 @@ namespace CSG
 					meshi = pOctree->pMesh[itr->first];
 					meshj = pOctree->pMesh[itr2->first];
 
+					if (meshi->ID > meshj->ID) {meshId[0] = meshj->ID; meshId[1] = meshi->ID;}
+					else {meshId[0] = meshi->ID; meshId[1] = meshj->ID;}
+
+					GS::IndexPair iPair;
+					GS::MakeIndex(meshId, iPair);
+					auto &antiOverlapSet = antiOverlapMap[iPair];
+
 					for (i = 0; i < ni; i++)
 					{
 						for (j = 0; j < nj; j++)
 						{
 							tri1 = itr->second[i];
 							tri2 = itr2->second[j];
+							if (meshi->ID > meshj->ID) {meshId[0] = tri2.idx(); meshId[1] = tri1.idx();}
+							else {meshId[0] = tri1.idx(); meshId[1] = tri2.idx();}
+							GS::MakeIndex(meshId, iPair);
+							if (antiOverlapSet.find(iPair) != antiOverlapSet.end()) continue;
+							else antiOverlapSet.insert(iPair);
 
 							// intersection test main body
 							GetCorners(meshi, tri1, v0, v1, v2);
@@ -178,10 +135,14 @@ namespace CSG
 							nu = meshj->normal(tri2);
 							
 							startT = INNER; endT = INNER; // return to Zero.
+
+							//auto &isecTris = (*si)->isecTris[meshj->ID];
+							//auto &icoplTris = (*si)->coplanarTris;
+
 							isISect = TriTriIntersectTest(*v0, *v1, *v2, nv,
 								*u0, *u1, *u2, nu, startT, endT, start, end);
 
-							if (!isISect) continue;
+							if (isISect < 0) continue;
 
 							si = &meshi->property(meshi->SurfacePropHandle, tri1);
 							sj = &meshj->property(meshj->SurfacePropHandle, tri2);
@@ -189,27 +150,33 @@ namespace CSG
 							if (!*si) *si = new ISectTriangle(meshi, tri1);
 							if (!*sj) *sj = new ISectTriangle(meshj, tri2);
 
+							if (isISect == 0)
+							{
+								(*si)->coplanarTris.emplace_back(meshj, tri2);
+								(*sj)->coplanarTris.emplace_back(meshi, tri1);
+								continue;
+							}
+
+							startiT = VertexPos(startT & 0xffff);
+							startjT = VertexPos(startT >> 16);
+
+							endiT = VertexPos(endT & 0xffff);
+							endjT = VertexPos(endT >> 16);
+
 							if (IsEqual(start, end))
 							{
 								// 点相交
-								int pointT = startT ^ endT;
 								Vec3d point = (start+end)/2;
 
-								startiT = VertexPos(pointT & 0xffff);
-								startjT = VertexPos(pointT >> 16);
-
+								// 最后一个参数表示，可能存在两个以上的插入点
 								vP1 = InsertPoint(*si, startiT, point);
+								InsertPoint(*si, endiT, vP1);
 								InsertPoint(*sj, startjT, vP1);
+								InsertPoint(*sj, endjT, vP1);
 							}
 							else
 							{
 								// 线相交
-								startiT = VertexPos(startT & 0xffff);
-								startjT = VertexPos(startT >> 16);
-
-								endiT = VertexPos(endT & 0xffff);
-								endjT = VertexPos(endT >> 16);
-
 								vP1 = InsertPoint(*si, startiT, start);
 								vP2 = InsertPoint(*si, endiT, end);
 								InsertSegment(*si, vP1, vP2, *sj);
@@ -222,19 +189,18 @@ namespace CSG
 					}
 				}
 			}
-
 		}
-
 	}
 
 	void FloodColoring(Octree* pOctree, CSGTree* pPosCSG);
 
-	GS::BaseMesh* result = new GS::BaseMesh;
+	GS::BaseMesh* result;
 
 	static GS::BaseMesh* BooleanOperation2(GS::CSGExprNode* input, HANDLE stdoutput)
 	{
 		_output= stdoutput;
         MPMesh** arrMesh = NULL;
+		result = new GS::BaseMesh;
         int nMesh = -1;
 		StdOutput("Start:");
         t0 = clock();
@@ -247,10 +213,17 @@ namespace CSG
 		InitZone();
 		ISectTest(pOctree);
         DebugInfo("ISectTest", t0);
-		RelationTest(pOctree);
-        DebugInfo("RelationTest", t0);
-		FloodColoring(pOctree, pPosCSG);
+		//RelationTest(pOctree);
+  //      DebugInfo("RelationTest", t0);
+		//FloodColoring(pOctree, pPosCSG);
 
+		//auto p0 = ZONE->mesh.point(ZONE->mesh.vertex_handle(3));
+		//auto p1 = ZONE->mesh.point(ZONE->mesh.vertex_handle(5));
+		//auto p2 = ZONE->mesh.point(ZONE->mesh.vertex_handle(6));
+		//auto p3 = ZONE->mesh.point(ZONE->mesh.vertex_handle(9));
+		//Vec3d *v0,*v1,*v2;
+		//auto pTest = pOctree->pMesh[0];
+		//GetCorners(pTest, pTest->face_handle(7), v0, v1, v2);
 		delete pOctree;
 		delete pPosCSG;
 		delete input;
@@ -260,7 +233,7 @@ namespace CSG
 			delete arrMesh[i];
 		delete [] arrMesh;
 
-		return NULL;
+		return result;
 	}
 
 
@@ -286,13 +259,41 @@ namespace CSG
             return;
         }
 
-        for ( int i = 0; i < 8 ; i++)
+        for (int i = 0; i < 8 ; i++)
             GetLeafNodes(&pNode->Child[i], leaves, NodeType);
     }
 
+	struct FacePair
+	{
+		MPMesh::FaceHandle seed, current;
+		const MPMesh::FaceHandle& operator[](int index) const
+		{
+			switch (index)
+			{
+			case 0:	return seed;
+			case 1:	return current;
+			default:
+				assert(0);
+				return current;
+			}
+		}
+
+		MPMesh::FaceHandle& operator[](int index)
+		{
+			switch (index)
+			{
+			case 0:	return seed;
+			case 1:	return current;
+			default:
+				assert(0);
+				return current;
+			}
+		}
+	};
+
 	struct SeedInfo
 	{
-		std::queue<MPMesh::FaceHandle[2]> queue;
+		std::queue<FacePair> queue;
 		Relation *relation;
 
 		SeedInfo():relation(nullptr){}
@@ -426,9 +427,9 @@ namespace CSG
 										faceQueue.push(*ffItr);
 									else
 									{
-										MPMesh::FaceHandle fh[2];
+										FacePair fh;
 										fh[0] = curFace;
-										fh[2] = *ffItr;
+										fh[1] = *ffItr;
 										seedQueueList.back().queue.push(fh);
 									}
 									*markPtr = 1; // queued
@@ -452,7 +453,7 @@ namespace CSG
 							switch (curRelation)
 							{
 							case REL_UNKNOWN:
-								ParsingFace(pMesh, curFace, curTree);
+								ParsingFace(pMesh, curFace, curTree, result);
 								break;
 							case REL_SAME:
 								AddTriangle(pMesh, curFace);
@@ -475,9 +476,9 @@ namespace CSG
 										faceQueue.push(*ffItr);
 									else
 									{
-										MPMesh::FaceHandle fh[2];
+										FacePair fh;
 										fh[0] = curFace;
-										fh[2] = *ffItr;
+										fh[1] = *ffItr;
 										seedQueueList.back().queue.push(fh);
 									}
 									*markPtr = 1; // queued
