@@ -163,6 +163,15 @@ namespace CSG
 			baryCenter2d = triFrag->getBarycenter();
 			tmpTree = copy(pTree);
 			i = 0;
+			GS::double3 v[3];
+			v[0] = Vec3dToDouble3(points[triFrag->getCorner(0)->getCustomIndex()].p3);
+			v[1] = Vec3dToDouble3(points[triFrag->getCorner(1)->getCustomIndex()].p3);
+			v[2] = Vec3dToDouble3(points[triFrag->getCorner(2)->getCustomIndex()].p3);
+
+			// 去除那些过小的三角形
+			GS::double3x3 mat(v[0], v[1], v[2]);
+			if (fabs(GS::determinant(mat)) < EPSF) continue;
+
 			for (auto testId: triangle->relationTestId)
 			{
 				if (tmpTree->Leaves.find(testId) != tmpTree->Leaves.end())
@@ -171,7 +180,10 @@ namespace CSG
 					if (tmpTree->Leaves.size() <= 1)
 					{
 						if (tmpTree->Leaves.find(pMesh->ID) != tmpTree->Leaves.end())
-							AddFaceToResult(pResult, triFrag, points);
+						{
+							//countd2 ++;
+							pResult->AddTriangle(v);
+						}
 						break;
 					}
 				}
@@ -184,8 +196,7 @@ namespace CSG
 	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, MPMesh::FaceHandle seedFace, 
 		Relation* relationSeed, unsigned nMesh, Relation*& output)
 	{
-		// 分情况讨论： 子集，超集，混合集
-		// TO-DO: 共面的检测
+		// 讨论相邻的两个三角形，如何从一个三角形导出另一个三角形的关系表的问题
 		output = new Relation[nMesh];
 		memcpy(output, relationSeed, sizeof(Relation)*nMesh);
 
@@ -193,11 +204,10 @@ namespace CSG
 
 		ISectTriangle* triSeed = pMesh->property(pMesh->SurfacePropHandle, seedFace);
 		ISectTriangle* triCur = pMesh->property(pMesh->SurfacePropHandle, curFace);
-		if (!triSeed)
+		if (!triSeed || (!triSeed->coplanarTris.size() && !triSeed->segs.size()))
 		{
 			assert(triCur);
-			for (auto& pair: triCur->segs)
-				output[pair.first] = REL_NOT_AVAILABLE;
+			MarkNARelation(triCur, output);
 		}
 		else
 		{
@@ -208,7 +218,10 @@ namespace CSG
 			GetCorners(pMesh, seedFace, v[0], v[1], v[2]); 
 			int a = triSeed->xi;
 			int b = triSeed->yi;
-			
+#ifdef _DEBUG
+			Vec3d* u[3];
+			GetCorners(pMesh, curFace, u[0], u[1], u[2]); 
+#endif
 			Point2 p[3];
 			p[0].set((*v[0])[a], (*v[0])[b]);
 			p[1].set((*v[1])[a], (*v[1])[b]);
@@ -220,25 +233,11 @@ namespace CSG
 			Point2 testPoint;
 			testPoint.set(p[a].x()+p[b].x()-p[index].x(), p[a].y()+p[b].y()-p[index].y());
 
-			if (triCur)
-			{
-				for (auto& pair: triCur->segs)
-					output[pair.first] = REL_UNKNOWN; // available
-				for (auto& itr: triCur->coplanarTris)
-					output[itr.pMesh->ID] = REL_UNKNOWN;
-			}
-
 			for (auto& pair: triSeed->segs)
 				if (output[pair.first] != REL_UNKNOWN)
 					output[pair.first] = BSP2DInOutTest(pair.second.bsp, &testPoint);
 
-			if (triCur)
-			{
-				for (auto& pair: triCur->segs)
-					output[pair.first] = REL_NOT_AVAILABLE; // available
-				for (auto& itr: triCur->coplanarTris)
-					output[itr.pMesh->ID] = REL_NOT_AVAILABLE;
-			}			
+			if (triCur) MarkNARelation(triCur, output);
 		}
 	}
 

@@ -113,6 +113,14 @@ namespace CSG
 		MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output);
 	bool CompareRelationSpace();
 
+	inline void MarkNARelation(ISectTriangle* tri, Relation* relation, Relation mark = REL_NOT_AVAILABLE)
+	{
+		for (auto& pair: tri->segs)
+			relation[pair.first] = mark;
+		for (auto& coItr: tri->coplanarTris)
+			relation[coItr.pMesh->ID] = mark;
+	}
+
 	extern ISectZone* ZONE;
 
 } // namespace CSG
