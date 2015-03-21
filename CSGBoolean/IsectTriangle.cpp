@@ -137,7 +137,7 @@ namespace CSG
 #endif
 			if (!other) other = new ISectTriangle(mesh, *ffItr);
 			output = InsertPoint(other, INNER, vec);
-			InsertPoint(tri, INNER, output);
+			return InsertPoint(tri, INNER, output);
 		}
 		else
 		{
@@ -154,13 +154,6 @@ namespace CSG
 				output = tri->corner[2];
 				break;
 			}
-		}
-
-		int count = 0;
-		while (!output->pos.is_valid())
-		{
-			count++;
-			output = output->next;
 		}
 		return output;
 	}
@@ -212,7 +205,7 @@ namespace CSG
 			ISectTriangle*& other = mesh->property(mesh->SurfacePropHandle, *ffItr);
 			if (!other) other = new ISectTriangle(mesh, *ffItr);
 			InsertPoint(other, INNER, ref);
-			InsertPoint(tri, INNER, ref);
+			return InsertPoint(tri, INNER, ref);
 		}
 		else
 		{

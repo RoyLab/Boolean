@@ -29,7 +29,7 @@ namespace CSG
 		Line2D line;
 		int type;
 
-		BSP2D(int t = NA):leftTree(0), rightTree(0), type(NA){}
+		BSP2D(int t = NA):leftTree(0), rightTree(0), type(t){}
 		~BSP2D(){SAFE_RELEASE(leftTree); SAFE_RELEASE(rightTree);}
 	};
 

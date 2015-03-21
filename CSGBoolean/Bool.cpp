@@ -15,6 +15,7 @@
 
 #ifdef _DEBUG
 #include <vld.h>
+int countd1, countd2, countd3, countd4, countd5;
 #endif
 
 #pragma warning(disable: 4800 4996)
@@ -177,13 +178,24 @@ namespace CSG
 							else
 							{
 								// 线相交
-								vP1 = InsertPoint(*si, startiT, start);
-								vP2 = InsertPoint(*si, endiT, end);
-								InsertSegment(*si, vP1, vP2, *sj);
-
-								vP1 = InsertPoint(*sj, startjT, vP1);
-								vP2 = InsertPoint(*sj, endjT, vP2);
-								InsertSegment(*sj, vP1, vP2, *si);
+								if (OpenMesh::dot(OpenMesh::cross(nv, nu), end-start) > 0)
+								{
+									vP1 = InsertPoint(*si, startiT, start);
+									vP2 = InsertPoint(*si, endiT, end);
+									InsertSegment(*si, vP1, vP2, *sj);
+									vP1 = InsertPoint(*sj, startjT, vP1);
+									vP2 = InsertPoint(*sj, endjT, vP2);
+									InsertSegment(*sj, vP2, vP1, *si);
+								}
+								else
+								{
+									vP1 = InsertPoint(*si, startiT, start);
+									vP2 = InsertPoint(*si, endiT, end);
+									InsertSegment(*si, vP2, vP1, *sj);
+									vP1 = InsertPoint(*sj, startjT, vP1);
+									vP2 = InsertPoint(*sj, endjT, vP2);
+									InsertSegment(*sj, vP1, vP2, *si);
+								}
 							}
 						}
 					}
@@ -213,17 +225,9 @@ namespace CSG
 		InitZone();
 		ISectTest(pOctree);
         DebugInfo("ISectTest", t0);
-		//RelationTest(pOctree);
-  //      DebugInfo("RelationTest", t0);
-		//FloodColoring(pOctree, pPosCSG);
+		FloodColoring(pOctree, pPosCSG);
+        DebugInfo("FloodColoring", t0);
 
-		//auto p0 = ZONE->mesh.point(ZONE->mesh.vertex_handle(3));
-		//auto p1 = ZONE->mesh.point(ZONE->mesh.vertex_handle(5));
-		//auto p2 = ZONE->mesh.point(ZONE->mesh.vertex_handle(6));
-		//auto p3 = ZONE->mesh.point(ZONE->mesh.vertex_handle(9));
-		//Vec3d *v0,*v1,*v2;
-		//auto pTest = pOctree->pMesh[0];
-		//GetCorners(pTest, pTest->face_handle(7), v0, v1, v2);
 		delete pOctree;
 		delete pPosCSG;
 		delete input;
@@ -305,7 +309,7 @@ namespace CSG
 		assert(triSeed);
 		if (!triCur)
 		{
-			if (triSeed->relationTestId.size()) return true;
+			if (!triSeed->relationTestId.size()) return true;
 			else return false;
 		}
 
@@ -327,6 +331,7 @@ namespace CSG
 
 	static void AddTriangle(MPMesh* pMesh, MPMesh::FaceHandle face)
     {
+		//countd1 ++;
 		GS::double3 v[3];
 		Vec3d *v0, *v1, *v2;
 		GetCorners(pMesh, face, v0, v1, v2);
@@ -348,7 +353,8 @@ namespace CSG
 		CSGTree* curTree;
 
 		SeedInfo** meshSeedInfo = new SeedInfo*[pOctree->nMesh];
-		memset(meshSeedInfo, 0, sizeof(SeedInfo)*pOctree->nMesh);
+		memset(meshSeedInfo, 0, sizeof(SeedInfo*)*pOctree->nMesh);
+		FacePair fPair;
 		
 		for (unsigned i0 = 0; i0 < pOctree->nMesh; i0++)
 		{
@@ -358,10 +364,18 @@ namespace CSG
 			meshSeedInfo[i0] = new SeedInfo;
 			meshSeedInfo[i0]->relation = new Relation[pOctree->nMesh];
 			memset(meshSeedInfo[i0]->relation, 0, sizeof(Relation)*pOctree->nMesh);
+			meshSeedInfo[i0]->queue.emplace();
+			meshSeedInfo[i0]->queue.back().seed = curFace;
+			meshSeedInfo[i0]->queue.back().current = curFace;
 
-			if (pMesh->property(pMesh->SurfacePropHandle, curFace))
-				for (auto iItr: pMesh->property(pMesh->SurfacePropHandle, curFace)->relationTestId)
-					meshSeedInfo[i0]->relation[iItr] = REL_NOT_AVAILABLE;
+			auto surface = pMesh->property(pMesh->SurfacePropHandle, curFace);
+			if (surface)
+			{
+				for (auto &iItr: surface->segs)
+					meshSeedInfo[i0]->relation[iItr.first] = REL_NOT_AVAILABLE;
+				for (auto &jItr: surface->coplanarTris)
+					meshSeedInfo[i0]->relation[jItr.pMesh->ID] = REL_NOT_AVAILABLE;
+			}
 
 			GetCorners(pMesh, curFace, v0, v1, v2);
 			Vec3d bc = (*v0+*v1+*v2)/3.0;
@@ -382,7 +396,7 @@ namespace CSG
 				{
 					while (!seeds.queue.empty())
 					{
-						if (pMesh->property(pMesh->MarkPropHandle, seeds.queue.front()[1]) == 0)
+						if (pMesh->property(pMesh->MarkPropHandle, seeds.queue.front()[1]) != 2)
 							break;
 						seeds.queue.pop();
 					}
@@ -400,9 +414,10 @@ namespace CSG
 
 					if (!pMesh->property(pMesh->SurfacePropHandle, curFace)) // 简单模式
 					{
-						assert(curRelation != REL_UNKNOWN);
+						assert(curRelation == REL_INSIDE || curRelation == REL_SAME);
 						while (!faceQueue.empty())
-						{					
+						{			
+							//countd3 ++;
 							while (1)
 							{
 								if (pMesh->property(pMesh->MarkPropHandle, faceQueue.front()) != 2)
@@ -441,6 +456,7 @@ namespace CSG
 					{
 						while (!faceQueue.empty())
 						{					
+							//countd4 ++;
 							while (1)
 							{
 								if (pMesh->property(pMesh->MarkPropHandle, faceQueue.front()) != 2)
@@ -449,16 +465,20 @@ namespace CSG
 							}
 
 							curFace = faceQueue.front();
+							assert(pMesh->property(pMesh->SurfacePropHandle, curFace));
 							faceQueue.pop();
 							switch (curRelation)
 							{
-							case REL_UNKNOWN:
+							case REL_NOT_AVAILABLE:
 								ParsingFace(pMesh, curFace, curTree, result);
 								break;
 							case REL_SAME:
 								AddTriangle(pMesh, curFace);
 								break;
+							case REL_INSIDE:
+								break;
 							default:
+								assert(0);
 								break;
 							}
 							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
@@ -466,13 +486,14 @@ namespace CSG
 							// add neighbor
 							ffItr = pMesh->ff_iter(curFace);
 							int *markPtr;
+							auto &seedSurface = pMesh->property(pMesh->SurfacePropHandle, curFace);
 							for (int i = 0; i < 3; i++, ffItr++)
 							{
 								markPtr = &(pMesh->property(pMesh->MarkPropHandle, *ffItr));
 								if (*markPtr == 0)
 								{
-									auto &surface = pMesh->property(pMesh->SurfacePropHandle, curFace);
-									if (surface && CompareRelationSpace(surface, pMesh->property(pMesh->SurfacePropHandle, *ffItr)))
+									auto &legSurface = pMesh->property(pMesh->SurfacePropHandle, *ffItr);
+									if (surface && CompareRelationSpace(seedSurface, legSurface))
 										faceQueue.push(*ffItr);
 									else
 									{
@@ -487,6 +508,7 @@ namespace CSG
 						}
 					}
 				}
+				seedQueueList.pop();
 			}
 		}
 	}

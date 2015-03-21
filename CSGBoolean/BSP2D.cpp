@@ -11,6 +11,7 @@ namespace CSG
 
 	// 通过向量的方向来划分空间
 	// 向量逆时针转90度为法向方向
+	// 法向表示朝里
 	inline void CalcLineCoef(ISCutSeg& seg, std::vector<TMP_VInfo>& infos)
 	{
 		auto &p0 = infos[seg.start->Id].p2;
@@ -22,7 +23,7 @@ namespace CSG
 		double d = dir.x()*p0.y()-dir.y()*p0.x();
 		seg.lineCoef[0] = -dir.y();
 		seg.lineCoef[1] = dir.x();
-		seg.lineCoef[2] = d;
+		seg.lineCoef[2] = -d;
 	}
 
 	void SplitSegments(BSPSeg& splitSeg, std::vector<BSPSeg>::iterator cur,  std::vector<BSPSeg>::iterator end, 

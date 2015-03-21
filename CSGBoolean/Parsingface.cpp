@@ -2,6 +2,7 @@
 #include "IsectTriangle.h"
 #include "BinaryTree.h"
 #include "BSP2D.h"
+#include "BaseMesh.h"
 #include "isect.h"
 #include <algorithm>
 
@@ -33,8 +34,16 @@ namespace CSG
 		std::sort(triangle->relationTestId.begin(), triangle->relationTestId.end());
 		Vec3d normal = pMesh->normal(faceHandle);
 		int mainAxis = FindMaxIndex(normal);
-		triangle->xi = (mainAxis+1)%3;
-		triangle->xi = (mainAxis+2)%3;
+		if (normal[mainAxis] > 0.0)
+		{
+			triangle->xi = (mainAxis+1)%3;
+			triangle->yi = (mainAxis+2)%3;
+		}
+		else
+		{
+			triangle->yi = (mainAxis+1)%3;
+			triangle->xi = (mainAxis+2)%3;
+		}
 
 		unsigned n_test = triangle->relationTestId.size();
 		unsigned n_vertices = triangle->vertices.size();
@@ -63,10 +72,10 @@ namespace CSG
 		Vec3d crossPoint;
 		for (unsigned i = 0; i < n_test; i++)
 		{
-			for (unsigned j = i; j < n_test; j++)
+			for (unsigned j = i+1; j < n_test; j++)
 			{
-				auto &segs1 = triangle->segs[i];
-				auto &segs2 = triangle->segs[j];
+				auto &segs1 = triangle->segs[triangle->relationTestId[i]];
+				auto &segs2 = triangle->segs[triangle->relationTestId[j]];
 
 				for (auto segItr1 = segs1.segs.begin(); segItr1 != segs1.segs.end(); segItr1++)
 				{
@@ -161,8 +170,9 @@ namespace CSG
 					CompressCSGTree(tmpTree, testId, BSP2DInOutTest(triangle->segs[testId].bsp, &baryCenter2d));
 					if (tmpTree->Leaves.size() <= 1)
 					{
-						if (tmpTree->Leaves.find(pMesh->ID) == tmpTree->Leaves.end()) break;
-						else AddFaceToResult(pResult, triFrag, points);
+						if (tmpTree->Leaves.find(pMesh->ID) != tmpTree->Leaves.end())
+							AddFaceToResult(pResult, triFrag, points);
+						break;
 					}
 				}
 				i++;
@@ -178,6 +188,8 @@ namespace CSG
 		// TO-DO: 共面的检测
 		output = new Relation[nMesh];
 		memcpy(output, relationSeed, sizeof(Relation)*nMesh);
+
+		if (seedFace == curFace) return;
 
 		ISectTriangle* triSeed = pMesh->property(pMesh->SurfacePropHandle, seedFace);
 		ISectTriangle* triCur = pMesh->property(pMesh->SurfacePropHandle, curFace);
@@ -211,12 +223,22 @@ namespace CSG
 			if (triCur)
 			{
 				for (auto& pair: triCur->segs)
-					output[pair.first] = REL_NOT_AVAILABLE; // available
-
-				for (auto& pair: triSeed->segs)
-					if (output[pair.first] != REL_NOT_AVAILABLE)
-						output[pair.first] = BSP2DInOutTest(pair.second.bsp, &testPoint);
+					output[pair.first] = REL_UNKNOWN; // available
+				for (auto& itr: triCur->coplanarTris)
+					output[itr.pMesh->ID] = REL_UNKNOWN;
 			}
+
+			for (auto& pair: triSeed->segs)
+				if (output[pair.first] != REL_UNKNOWN)
+					output[pair.first] = BSP2DInOutTest(pair.second.bsp, &testPoint);
+
+			if (triCur)
+			{
+				for (auto& pair: triCur->segs)
+					output[pair.first] = REL_NOT_AVAILABLE; // available
+				for (auto& itr: triCur->coplanarTris)
+					output[itr.pMesh->ID] = REL_NOT_AVAILABLE;
+			}			
 		}
 	}
 
@@ -263,11 +285,26 @@ namespace CSG
 				}
 			}
 		}
+		else
+		{
+			assert(0);
+		}
+
 	}
 
-	void AddFaceToResult(GS::BaseMesh*, GEOM_FADE2D::Triangle2*, std::vector<TMP_VInfo>&)
+	void AddFaceToResult(GS::BaseMesh* result, GEOM_FADE2D::Triangle2* tri, std::vector<TMP_VInfo>& infos)
 	{
+		//countd2 ++;
+		GS::double3 v[3];
+		v[0] = Vec3dToDouble3(infos[tri->getCorner(0)->getCustomIndex()].p3);
+		v[1] = Vec3dToDouble3(infos[tri->getCorner(1)->getCustomIndex()].p3);
+		v[2] = Vec3dToDouble3(infos[tri->getCorner(2)->getCustomIndex()].p3);
 
+		// 去除那些过小的三角形
+		GS::double3x3 mat(v[0], v[1], v[2]);
+		if (fabs(GS::determinant(mat)) < EPSF) return;
+
+		result->AddTriangle(v);
 	}
 
 	ISCutSegData::ISCutSegData():bsp(0){}
