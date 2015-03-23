@@ -348,7 +348,9 @@ namespace CSG
 
 	static void AddTriangle(MPMesh* pMesh, MPMesh::FaceHandle face)
     {
-		//countd1 ++;
+#ifdef _DEBUG
+		countd1 ++;
+#endif
 		GS::double3 v[3];
 		Vec3d *v0, *v1, *v2;
 		GetCorners(pMesh, face, v0, v1, v2);
@@ -440,6 +442,10 @@ namespace CSG
 							}
 
 							curFace = faceQueue.front();
+#ifdef _DEBUG
+							GetCorners(pMesh, curFace, v0, v1, v2);
+							countd4 ++;
+#endif
 							auto seedSurface = pMesh->property(pMesh->SurfacePropHandle, curFace);
 							faceQueue.pop();
 
@@ -484,7 +490,6 @@ namespace CSG
 					}
 					else  // ¼òµ¥Ä£Ê½
 					{
-						assert(curRelation == REL_INSIDE || curRelation == REL_SAME);
 						while (!faceQueue.empty())
 						{			
 							while (1)
@@ -495,6 +500,12 @@ namespace CSG
 							}
 
 							curFace = faceQueue.front();
+#ifdef _DEBUG
+							GetCorners(pMesh, curFace, v0, v1, v2);
+							countd3 ++;
+							assert(curRelation == REL_INSIDE || curRelation == REL_SAME);
+#endif
+
 							faceQueue.pop();
 							if (curRelation == REL_SAME) AddTriangle(pMesh, curFace);
 							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
@@ -507,7 +518,8 @@ namespace CSG
 								markPtr = &(pMesh->property(pMesh->MarkPropHandle, *ffItr));
 								if (*markPtr == 0)
 								{
-									if (!pMesh->property(pMesh->SurfacePropHandle, *ffItr))
+									auto legSurface = pMesh->property(pMesh->SurfacePropHandle, *ffItr);
+									if (!legSurface || (!legSurface->segs.size() && !legSurface->coplanarTris.size()))
 										faceQueue.push(*ffItr);
 									else
 									{

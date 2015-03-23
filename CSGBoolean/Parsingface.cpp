@@ -169,7 +169,7 @@ namespace CSG
 			v[2] = Vec3dToDouble3(points[triFrag->getCorner(2)->getCustomIndex()].p3);
 
 			// 去除那些过小的三角形
-			GS::double3x3 mat(v[0], v[1], v[2]);
+			GS::double3x3 mat(GS::double3(1,1,1), v[2]-v[1], v[2]-v[0]);
 			if (fabs(GS::determinant(mat)) < EPSF) continue;
 
 			for (auto testId: triangle->relationTestId)
@@ -181,7 +181,9 @@ namespace CSG
 					{
 						if (tmpTree->Leaves.find(pMesh->ID) != tmpTree->Leaves.end())
 						{
-							//countd2 ++;
+#ifdef _DEBUG
+							countd2 ++;
+#endif
 							pResult->AddTriangle(v);
 						}
 						break;

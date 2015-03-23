@@ -37,7 +37,7 @@ namespace CSG
 		for (;cur != end; cur++)
 		{
 			CALC_DISTANCE(ds, splitCoef, cur->start);
-			CALC_DISTANCE(de, splitCoef, cur->start);
+			CALC_DISTANCE(de, splitCoef, cur->end);
 			if (ds*de < 0.0)
 			{
 				nx = cur->start.x()*de/(de-ds)+cur->end.x()*ds/(ds-de);

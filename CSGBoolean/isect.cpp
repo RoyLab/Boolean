@@ -304,7 +304,7 @@ int TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const
 	GS::NormalDistToSign(du, sdu);
 
 	if ((sdu[0] == sdu[1]) && (sdu[1] == sdu[2]))
-		if (sdu[0] = 0) return 0;
+		if (sdu[0] == 0) return 0;
 		else return -1; 
 
 	double d2=-dot(nu, u0);
@@ -315,7 +315,7 @@ int TriTriIntersectTest(const Vec3d& v0, const Vec3d& v1, const Vec3d& v2, const
 	int sdv[3];
 	GS::NormalDistToSign(dv, sdv);
 	if ((sdv[0] == sdv[1]) && (sdv[1] == sdv[2]))
-		if (sdu[0] = 0) return 0;
+		if (sdv[0] == 0) return 0;
 		else return -1; 
 
 	/* compute direction of intersection line */
