@@ -56,22 +56,11 @@ namespace CSG
 		~ISCutSegData();
 	};
 
-	struct CoplanarPlane
-	{
-		MPMesh* pMesh;
-		MPMesh::FaceHandle faceHandle;
-
-		CoplanarPlane(MPMesh* mesh, MPMesh::FaceHandle fh):
-			pMesh(mesh), faceHandle(fh){}
-
-		bool operator==(const CoplanarPlane& tri){return (tri.faceHandle == faceHandle && tri.pMesh == pMesh);}
-	};
-
 	struct ISectTriangle
 	{
 		std::list<ISVertexInfo> vertices;
 		std::map<int, ISCutSegData> segs;
-		std::vector<CoplanarPlane> coplanarTris;
+		std::map<int, std::list<MPMesh::FaceHandle>> coplanarTris;
 		//std::map<int, std::vector<MPMesh::FaceHandle>> isecTris;
 
 		MPMesh*				pMesh;
@@ -108,7 +97,7 @@ namespace CSG
 	void InsertSegment(ISectTriangle* tri, ISVertexItr v0, ISVertexItr v1, ISectTriangle* tri2);
 	void GetLocation(ISVertexInfo* info, Vec3d& vec);
 
-	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const CSGTree*, GS::BaseMesh*);
+	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const CSGTree*, MPMesh**, GS::BaseMesh*);
 	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, 
 		MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output);
 	bool CompareRelationSpace();
@@ -117,8 +106,8 @@ namespace CSG
 	{
 		for (auto& pair: tri->segs)
 			relation[pair.first] = mark;
-		for (auto& coItr: tri->coplanarTris)
-			relation[coItr.pMesh->ID] = mark;
+		for (auto& pair2: tri->coplanarTris)
+			relation[pair2.first] = mark;
 	}
 
 	extern ISectZone* ZONE;

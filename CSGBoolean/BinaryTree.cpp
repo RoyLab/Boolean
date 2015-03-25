@@ -128,7 +128,7 @@ namespace CSG
 			{
 				res->Type = root->Type;
 				res->pLeft = ConvertToPositiveTree(root->pLeft, inverse, level+1, Ldepth);
-				res->pRight = ConvertToPositiveTree(root->pRight, !inverse, level+1, Rdepth);
+				res->pRight = ConvertToPositiveTree(root->pRight, inverse, level+1, Rdepth);
 			}
 			maxLvl = (Ldepth > Rdepth)? Ldepth:Rdepth;
 			if (Ldepth < Rdepth)
@@ -358,6 +358,86 @@ namespace CSG
 		return REL_UNKNOWN;
 	}
 	
+	static Relation CompressCSGTreeWithSame(CSGTree* tree, unsigned Id)
+	{
+		auto leaf = tree->Leaves[Id];
+		CSGTreeNode *curPtr = leaf, *parent = leaf->Parent, *neib;
+
+		while (true)
+		{
+			if (!parent)
+			{
+				delete tree->pRoot;
+				tree->pRoot = nullptr;
+				tree->Leaves.clear();
+				return REL_SAME;
+			}
+			if (LeftOrRight(curPtr) < 0.0)
+				neib = parent->pRight;
+			else neib = parent->pLeft;
+
+			if (neib->relation == REL_SAME)
+			{
+				curPtr = parent;
+				parent = parent->Parent;
+			}
+			else if (neib->relation == REL_OPPOSITE)
+			{
+				if (parent->Type == TYPE_UNION)
+					return CompressCSGTreeWithInside(tree, Id);
+				else if (parent->Type == TYPE_INTERSECT)
+					return CompressCSGTreeWithOutside(tree, Id);
+				else assert(0);
+			}
+			else break;
+		}
+		curPtr->relation = REL_SAME;
+		SAFE_RELEASE(curPtr->pLeft);
+		SAFE_RELEASE(curPtr->pRight);
+		GetLeafList(tree);
+		return REL_NOT_AVAILABLE;
+	}
+
+	static Relation CompressCSGTreeWithOppo(CSGTree* tree, unsigned Id)
+	{
+		auto leaf = tree->Leaves[Id];
+		CSGTreeNode *curPtr = leaf, *parent = leaf->Parent, *neib;
+
+		while (true)
+		{
+			if (!parent)
+			{
+				delete tree->pRoot;
+				tree->pRoot = nullptr;
+				tree->Leaves.clear();
+				return REL_OPPOSITE;
+			}
+			if (LeftOrRight(curPtr) < 0.0)
+				neib = parent->pRight;
+			else neib = parent->pLeft;
+
+			if (neib->relation == REL_OPPOSITE)
+			{
+				curPtr = parent;
+				parent = parent->Parent;
+			}
+			else if (neib->relation == REL_SAME)
+			{
+				if (parent->Type == TYPE_UNION)
+					return CompressCSGTreeWithInside(tree, Id);
+				else if (parent->Type == TYPE_INTERSECT)
+					return CompressCSGTreeWithOutside(tree, Id);
+				else assert(0);
+			}
+			else break;
+		}
+		curPtr->relation = REL_OPPOSITE;
+		SAFE_RELEASE(curPtr->pLeft);
+		SAFE_RELEASE(curPtr->pRight);
+		GetLeafList(tree);
+		return REL_NOT_AVAILABLE;
+	}
+
 	Relation CompressCSGTree(CSGTree* tree, unsigned Id, Relation rel)
 	{
 		// T∩N⇒N,  F∪N⇒N, F∩N⇒F, and T∪N⇒T
@@ -371,6 +451,12 @@ namespace CSG
 			break;
 		case REL_OUTSIDE:
 			return CompressCSGTreeWithOutside(tree, Id);
+			break;
+		case REL_SAME:
+			return CompressCSGTreeWithSame(tree, Id);
+			break;
+		case REL_OPPOSITE:
+			return CompressCSGTreeWithOppo(tree, Id);
 			break;
 		default:
 			assert(0);
@@ -541,7 +627,11 @@ namespace CSG
 			seed = seed->Parent;
 		}
 
-		if (!simple) return REL_NOT_AVAILABLE;
+		if (!simple)
+		{
+			GetLeafList(curTree);
+			return REL_NOT_AVAILABLE;
+		}
 		if (pass) return REL_SAME;
 		else return REL_INSIDE; //也有可能是OutSide
 	}

@@ -153,8 +153,8 @@ namespace CSG
 
 							if (isISect == 0)
 							{
-								(*si)->coplanarTris.emplace_back(meshj, tri2);
-								(*sj)->coplanarTris.emplace_back(meshi, tri1);
+								(*si)->coplanarTris[meshj->ID].emplace_back(tri2);
+								(*sj)->coplanarTris[meshi->ID].emplace_back(tri1);
 								continue;
 							}
 
@@ -306,42 +306,33 @@ namespace CSG
 
 	bool CompareRelationSpace(ISectTriangle* triSeed, ISectTriangle* triCur)
 	{
-		//assert(triSeed);
-		//if (!triCur)
-		//{
-		//	if (!triSeed->relationTestId.size()) return true;
-		//	else return false;
-		//}
-
-		//// 首先相交集必须是子集，然后relationTest必须相同
-		//auto end = triCur->segs.end();
-		//for (auto triId: triSeed->relationTestId)
-		//{
-		//	if (triCur->segs.find(triId) == end) return false;
-		//}
-
-		//end = triSeed->segs.end();
-		//for (auto &pair: triCur->segs)
-		//{
-		//	if (triSeed->segs.find(pair.first) == end) return false;
-		//}
-
-		//return true;
 		assert(triSeed && triCur);
 
 		std::map<int, int> map;
 		for (auto& pair: triSeed->segs)
-			map[pair.first] ++;
-		for (auto& coItr: triSeed->coplanarTris)
-			map[coItr.pMesh->ID] ++;
+			map[pair.first] = 1;
+		for (auto& pair2: triSeed->coplanarTris)
+			map[pair2.first] = 1;
 
+		std::map<int, int>::iterator itr;
 		for (auto& pair: triCur->segs)
-			map[pair.first] ++;
-		for (auto& coItr: triCur->coplanarTris)
-			map[coItr.pMesh->ID] ++;
+		{
+			itr = map.find(pair.first);
+			if (itr == map.end())
+				return false;
+			else itr->second ++;
+		}
 
-		for (auto& pair2: map)
-			if (pair2.second == 1) return false;
+		for (auto& pair2: triCur->coplanarTris)
+		{
+			itr = map.find(pair2.first);
+			if (itr == map.end())
+				return false;
+			else itr->second ++;
+		}
+
+		for (auto& pair3: map)
+			if (pair3.second == 1) return false;
 
 		return true;
 	}
@@ -452,10 +443,10 @@ namespace CSG
 							switch (curRelation)
 							{
 							case REL_NOT_AVAILABLE:
-								ParsingFace(pMesh, curFace, curTree, result);
+								ParsingFace(pMesh, curFace, curTree, pOctree->pMesh, result);
 								break;
 							case REL_SAME:
-								ParsingFace(pMesh, curFace, curTree, result);
+								ParsingFace(pMesh, curFace, curTree, pOctree->pMesh, result);
 								break;
 							case REL_INSIDE:
 								break;

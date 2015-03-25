@@ -145,7 +145,7 @@ namespace CSG
 			{
 				double d;
 				CALC_DISTANCE(d, bsp->line, *point);
-				if (fabs(d) < 1.0e-10) return REL_SAME;
+				if (fabs(d) < 1.0e-10) {assert(0);return REL_SAME;}
 				if (d < 0.0) return BSP2DInOutTest(bsp->rightTree, point);
 				else return BSP2DInOutTest(bsp->leftTree, point);
 			}
