@@ -67,6 +67,7 @@ namespace CSG
 		// 取得有效的相交网格列表
 		std::sort(triangle->relationTestId.begin(), triangle->relationTestId.end());
 		Vec3d normal = pMesh->normal(faceHandle);
+		if (pMesh->bInverse) normal = -normal;
 		int mainAxis = FindMaxIndex(normal);
 		if (normal[mainAxis] > 0.0)
 		{
@@ -218,6 +219,13 @@ namespace CSG
 #ifdef _DEBUG
 								countd2 ++;
 #endif
+								if (pMesh->bInverse)
+								{
+									auto tmp = v[0];
+									v[0] = v[2];
+									v[2] = tmp;
+								}
+
 								pResult->AddTriangle(v);
 							}
 							break;

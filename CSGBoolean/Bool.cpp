@@ -178,7 +178,9 @@ namespace CSG
 							else
 							{
 								// ÏßÏà½»
-								if (OpenMesh::dot(OpenMesh::cross(nv, nu), end-start) > 0)
+								double d = OpenMesh::dot(OpenMesh::cross(nv, nu), end-start);
+								if (meshi->bInverse ^ meshj->bInverse) d = -d;
+								if (d > 0)
 								{
 									vP1 = InsertPoint(*si, startiT, start);
 									vP2 = InsertPoint(*si, endiT, end);
@@ -344,7 +346,8 @@ namespace CSG
 #endif
 		GS::double3 v[3];
 		Vec3d *v0, *v1, *v2;
-		GetCorners(pMesh, face, v0, v1, v2);
+		if (pMesh->bInverse) GetCorners(pMesh, face, v2, v1, v0);
+		else GetCorners(pMesh, face, v0, v1, v2);
 		v[0] = Vec3dToDouble3(*v0);
 		v[1] = Vec3dToDouble3(*v1);
 		v[2] = Vec3dToDouble3(*v2);
