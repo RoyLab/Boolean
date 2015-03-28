@@ -4,15 +4,24 @@
 #include "typedefs.h"
 #include "Global.h"
 #include "BoolOp.h"
-#include <iostream>
+#include <fstream>
 
+std::vector<std::string> expression;
 
 CGraphics::CGraphics()
 	:mViewPortSize(0, 0)
 	, mCursorPos(0, 0)
 {
 	m_pD3D =0;
-	mExpression="0-(1+2)";
+    std::ifstream script("D:\\boolconfig.txt");
+    if (!script) std::cout << '\a';
+    char eval[32];
+    while (!script.eof())
+    {
+        script.getline(eval, 32);
+        expression.emplace_back(eval);
+    }
+    script.close();
 }
 
 CGraphics::~CGraphics()
@@ -165,22 +174,9 @@ void CGraphics::Intersect()
  void CGraphics::EvaluateBoolExpression()
  {
      bool flag = false;
-     //std::string s ="";
-     //char c[20];
-     //const int end = 5;
-     //for (int i = 0 ; i < end; i++)
-     //{
-     //    
-     //    sprintf_s(c, 20, "%d", i);
-     //    s+=c;
-     //    if (i <end-1)
-     //        if (flag) s+="+";
-     //        else s+="-";
-     //   flag = !flag;
-     //}
-
-     //mModelMgr.EvaluateBoolExpression(s);
-     mModelMgr.EvaluateBoolExpression(mExpression.c_str());
+     static unsigned count = 0;
+     mModelMgr.EvaluateBoolExpression(expression[count]);
+     count = (count+1)%expression.size();
  }
 
 

@@ -55,17 +55,12 @@ namespace CSG
 		else return false;
 	}
 
-	void ParsingFace(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, const TestTree* pTree, MPMesh** meshList, GS::BaseMesh* pResult)
-	{
+	void ParsingFace1(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, MPMesh** meshList, std::vector<TMP_VInfo>& points)
+    {
 		// 树不为空，存在一个on的节点
 		ISectTriangle* triangle = pMesh->property(pMesh->SurfacePropHandle, faceHandle);
 		assert(triangle);
-        triangle->relationTestId.clear();
-		for (auto &itr: *pTree)
-            GetLeafList(itr.testTree, triangle->relationTestId);
 
-		// 取得有效的相交网格列表
-		std::sort(triangle->relationTestId.begin(), triangle->relationTestId.end());
 		Vec3d normal = pMesh->normal(faceHandle);
 		if (pMesh->bInverse) normal = -normal;
 		int mainAxis = FindMaxIndex(normal);
@@ -80,11 +75,9 @@ namespace CSG
 			triangle->xi = (mainAxis+2)%3;
 		}
 
-		unsigned n_test = triangle->relationTestId.size();
 		unsigned n_vertices = triangle->vertices.size();
 
 		// 3D 转 2D 坐标
-		std::vector<TMP_VInfo> points;
 		points.reserve(n_vertices+5);
 		points.resize(n_vertices);
 		size_t count = 0;
@@ -101,9 +94,26 @@ namespace CSG
 		// 建立 BSP 树空间
 		for (auto &pair: triangle->segs)
 			pair.second.bsp = BuildBSP2D(triangle, pair.first,points);
+    }
+
+	void ParsingFace(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, const TestTree* pTree,
+        Relation testRelation, MPMesh** meshList, std::vector<TMP_VInfo>& points, GS::BaseMesh* pResult)
+	{
+        if (testRelation == REL_INSIDE) return;
+
+		// 树不为空，存在一个on的节点
+		ISectTriangle* triangle = pMesh->property(pMesh->SurfacePropHandle, faceHandle);
+		assert(triangle);
+        triangle->relationTestId.clear();
+		for (auto &itr: *pTree)
+            GetLeafList(itr.testTree, triangle->relationTestId);
+
+		// 取得有效的相交网格列表
+		std::sort(triangle->relationTestId.begin(), triangle->relationTestId.end());
 
 		// 记录二次相交点
 		std::map<ISCutSegItr, std::list<ISVertexItr>> crossRecord;
+		unsigned n_test = triangle->relationTestId.size();
 		Vec3d crossPoint;
 		for (unsigned i = 0; i < n_test; i++)
 		{
@@ -194,6 +204,7 @@ namespace CSG
 		CSGTreeNode* curNode;
         Relation curRelation(REL_UNKNOWN), outRelation(REL_UNKNOWN);
         bool pass;
+
 		for (auto triFrag: vAllTriangles)
 		{
 			baryCenter2d = triFrag->getBarycenter();
@@ -213,6 +224,7 @@ namespace CSG
                 while (curNode)
                 {
                     curRelation = REL_UNKNOWN;
+                    testId = curNode->pMesh->ID;
                     auto cop = triangle->coplanarTris.find(testId);
                     if (cop != triangle->coplanarTris.end())
                     {
@@ -239,13 +251,6 @@ namespace CSG
 #ifdef _DEBUG
 				countd2 ++;
 #endif
-				//if (pMesh->bInverse)
-				//{
-				//	auto tmp = v[0];
-				//	v[0] = v[2];
-				//	v[2] = tmp;
-				//}
-
 				pResult->AddTriangle(v);
             }
         }

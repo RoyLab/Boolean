@@ -367,6 +367,7 @@ namespace CSG
 		FacePair fPair;
 		ISectTriangle *curSurface;
         TestTree testList;
+        std::vector<TMP_VInfo> points;
 
 		for (unsigned i0 = 0; i0 < pOctree->nMesh; i0++)
 		{
@@ -424,6 +425,7 @@ namespace CSG
 					curTree = copy(pPosCSG);
                     testList.clear();
 					curRelation = ParsingCSGTree(pMesh, curRelationTable, pOctree->nMesh, curTree, testList); // 未检查testList
+                    assert(!testList.size() || !testList.begin()->testTree->Parent);
 					curSurface = pMesh->property(pMesh->SurfacePropHandle, curFace);
 
 					if (curSurface && (curSurface->segs.size() || curSurface->coplanarTris.size())) // 复合模式
@@ -444,21 +446,9 @@ namespace CSG
 #endif
 							auto seedSurface = pMesh->property(pMesh->SurfacePropHandle, curFace);
 							faceQueue.pop();
-
-							switch (curRelation)
-							{
-							case REL_NOT_AVAILABLE:
-								ParsingFace(pMesh, curFace, &testList, pOctree->pMesh, result);
-								break;
-							case REL_SAME:
-								ParsingFace(pMesh, curFace, &testList, pOctree->pMesh, result);
-								break;
-							case REL_INSIDE:
-								break;
-							default:
-								assert(0);
-								break;
-							}
+                            points.clear();
+                            ParsingFace1(pMesh, curFace, pOctree->pMesh, points);
+							ParsingFace(pMesh, curFace, &testList, curRelation, pOctree->pMesh, points, result);
 							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
 
 							// add neighbor

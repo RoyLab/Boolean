@@ -141,6 +141,9 @@ namespace CSG
 
 			if (res->pLeft) res->pLeft->Parent = res;
 			if (res->pRight) res->pRight->Parent = res;
+
+            if (inverse)
+                res->Type = (res->Type == TYPE_INTERSECT)?TYPE_UNION:TYPE_INTERSECT;
 		}
 
 		return res;
@@ -499,7 +502,8 @@ namespace CSG
 				delete root->pRight;
 				auto tmp = root;
 				root = root->pLeft;
-				
+				root->Parent = tmp->Parent;
+
 				tmp->pLeft = nullptr;
 				tmp->pRight = nullptr;
 				delete tmp;
@@ -524,6 +528,7 @@ namespace CSG
 				delete root->pRight;
 				auto tmp = root;
 				root = root->pLeft;
+				root->Parent = tmp->Parent;
 				
 				tmp->pLeft = nullptr;
 				tmp->pRight = nullptr;
@@ -550,6 +555,7 @@ namespace CSG
 				delete root->pLeft;
 				auto tmp = root;
 				root = root->pRight;
+				root->Parent = tmp->Parent;
 				
 				tmp->pLeft = nullptr;
 				tmp->pRight = nullptr;
@@ -574,6 +580,7 @@ namespace CSG
 				delete root->pLeft;
 				auto tmp = root;
 				root = root->pRight;
+				root->Parent = tmp->Parent;
 				
 				tmp->pLeft = nullptr;
 				tmp->pRight = nullptr;
