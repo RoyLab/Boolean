@@ -48,7 +48,7 @@ namespace CSG
 		Register(this);
 	}
 
-	ISectTriangle::~ISectTriangle()	 {if (dtZone) delete dtZone;	}
+	ISectTriangle::~ISectTriangle()	 {SAFE_RELEASE(dtZone);	}
 
 	void InitZone()
 	{

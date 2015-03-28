@@ -21,6 +21,8 @@
 
 namespace CSG
 {
+	unsigned long long mark;
+
 	CSGTreeNode::CSGTreeNode():
 		relation(REL_UNKNOWN),
 		Type(TYPE_UNKNOWN), Parent(0),
@@ -86,7 +88,6 @@ namespace CSG
 		if (root->pRight) root->pRight->Parent = root;
     }
 
-
     CSGTree* ConvertCSGTree(GS::CSGExprNode* root, MPMesh*** arrMesh, int *nMesh) // convert nodes.
     {
         if (!root) return NULL;
@@ -145,6 +146,19 @@ namespace CSG
 		return res;
 	}
 
+    void GetLeafList(CSGTreeNode* root, std::vector<int>& list)
+    {
+		if (root->Type == TYPE_LEAF)
+		{
+			list.push_back(root->pMesh->ID);
+		}
+		else
+		{
+			GetLeafList(root->pLeft, list);
+			GetLeafList(root->pRight, list);
+		}
+    }
+
 	static void GetLeafList(CSGTreeNode* root, decltype(CSGTree::Leaves)& leaves)
 	{
 		if (root->Type == TYPE_LEAF)
@@ -157,7 +171,6 @@ namespace CSG
 			GetLeafList(root->pRight, leaves);
 		}
 	}
-
 
 	static void GetLeafList(CSGTree* tree)
 	{
@@ -586,7 +599,7 @@ namespace CSG
 		return res;
 	}
 
-	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree*& curTree)
+	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree*& curTree, TestTree& output)
 	{
 		for (auto& pair: curTree->Leaves)
 			pair.second->relation = tab[pair.first];
@@ -614,28 +627,211 @@ namespace CSG
 			{
 				comp = seed->Parent->pRight;
 				checkRel ^= REL_SAME;
+                seed->Parent->pRight = nullptr;
 			}
-			else comp = seed->Parent->pLeft;
-			Relation resRel = CompressCSGNode(comp);
-			if (!(checkRel & resRel)) // 如果不能确定，则返回not available (0xffffffff)
+			else
+            {
+                comp = seed->Parent->pLeft;
+                seed->Parent->pLeft = nullptr;
+            }
+            comp->Parent = nullptr;
+			Relation resRel = CompressCSGNodeIteration(comp);
+            if (resRel == REL_NOT_AVAILABLE)
+            {
+                output.emplace_back();
+                output.back().targetRelation = checkRel;
+                output.back().testTree = comp;
+                simple = false;
+            }
+			else
 			{
-				pass = false;
-				break;
+                SAFE_RELEASE(comp);
+                if (!(checkRel & resRel))
+                {
+				    pass = false;
+				    break;
+                }
 			}
-			if (resRel == REL_NOT_AVAILABLE) simple = false;
 
 			seed = seed->Parent;
 		}
 
-		if (!simple)
-		{
-			GetLeafList(curTree);
-			return REL_NOT_AVAILABLE;
-		}
+        SAFE_RELEASE(curTree);
+		if (!simple) return REL_NOT_AVAILABLE;
+
+        output.clear();
 		if (pass) return REL_SAME;
 		else return REL_INSIDE; //也有可能是OutSide
 	}
 
+	CSGTreeNode* GetFirstNode(CSGTreeNode* root)
+	{
+		assert(root);
+		if (IsLeaf(root)) return root;
+		else	 return GetFirstNode(root->pLeft);
+	}
+
+	// In ∩ X = X;		Out ∩ X = Out;
+	// In ∪ X = In;		Out ∪ X = X;
+
+	CSGTreeNode* ParsingInside(CSGTreeNode*& curNode, Relation &output);
+	CSGTreeNode* ParsingOutside(CSGTreeNode*& curNode, Relation &output);
+	CSGTreeNode* ParsingSame(CSGTreeNode*& curNode, Relation &output);
+	CSGTreeNode* ParsingOppo(CSGTreeNode*& curNode, Relation &output);
+
+	CSGTreeNode* ParsingInside(CSGTreeNode*& curNode, Relation &output)
+	{
+		CSGTreeNode *neib, *parent = curNode->Parent;
+		double lor = LeftOrRight(curNode);
+        if (lor == 0)
+        {
+            output = REL_INSIDE;
+            return nullptr;
+        }
+
+		if (parent->Type == TYPE_INTERSECT)
+		{
+			if (lor < 0) // left node
+			{
+				neib = parent->pRight;
+				return GetFirstNode(neib);
+			}
+			else
+#ifdef _DEBUG
+                if (lor > 0) // right node, check the left
+#endif
+			{
+				neib = parent->pLeft;
+				if (neib->mark == mark) // same
+					return ParsingSame(parent, output);
+				else if (neib->mark == mark+1)
+					return ParsingOppo(parent, output);
+				else return ParsingInside(parent, output);
+			}
+#ifdef _DEBUG
+            else assert(0);
+#endif
+		}
+        else // Union
+            return ParsingInside(parent, output);
+	}
+
+	CSGTreeNode* ParsingOutside(CSGTreeNode*& curNode, Relation &output)
+	{
+		CSGTreeNode *neib, *parent = curNode->Parent;
+		double lor = LeftOrRight(curNode);
+        if (lor == 0)
+        {
+            output = REL_OUTSIDE;
+            return nullptr;
+        }
+
+		if (parent->Type == TYPE_UNION)
+		{
+			if (lor < 0) // left node
+			{
+				neib = parent->pRight;
+				return GetFirstNode(neib);
+			}
+			else
+#ifdef _DEBUG
+                if (lor > 0) // right node, check the left
+#endif
+			{
+				neib = parent->pLeft;
+				if (neib->mark == mark) // same
+					return ParsingSame(parent, output);
+				else if (neib->mark == mark+1)
+					return ParsingOppo(parent, output);
+				else return ParsingOutside(parent, output);
+			}
+#ifdef _DEBUG
+            else assert(0);
+#endif
+		}
+        else // Union
+            return ParsingOutside(parent, output);
+	}
+
+    	CSGTreeNode* ParsingSame(CSGTreeNode*& curNode, Relation &output)
+	{
+		CSGTreeNode *neib, *parent = curNode->Parent;
+		double lor = LeftOrRight(curNode);
+        if (lor == 0)
+        {
+            output = REL_SAME;
+            return nullptr;
+        }
+
+        if (lor < 0) // left
+        {
+            curNode->mark = mark;
+            return GetFirstNode(parent->pRight);
+        }
+        else
+        {
+            neib = parent->pLeft;
+            if (neib->mark == mark) // same
+                return ParsingSame(parent, output);
+            else if (neib->mark == mark+1)
+            {
+                if (parent->Type == TYPE_INTERSECT)
+                    return ParsingOutside(parent, output);
+                else return ParsingInside(parent, output);
+            }
+            else return ParsingSame(parent, output);
+        }
+	}
+
+    	CSGTreeNode* ParsingOppo(CSGTreeNode*& curNode, Relation &output)
+	{
+		CSGTreeNode *neib, *parent = curNode->Parent;
+		double lor = LeftOrRight(curNode);
+        if (lor == 0)
+        {
+            output = REL_OPPOSITE;
+            return nullptr;
+        }
+
+        if (lor < 0) // left
+        {
+            curNode->mark = mark+1;
+            return GetFirstNode(parent->pRight);
+        }
+        else
+        {
+            neib = parent->pLeft;
+            if (neib->mark == mark+1) // oppo
+                return ParsingOppo(parent, output);
+            else if (neib->mark == mark)
+            {
+                if (parent->Type == TYPE_INTERSECT)
+                    return ParsingOutside(parent, output);
+                else return ParsingInside(parent, output);
+            }
+            else return ParsingOppo(parent, output);
+        }
+	}
+
+	CSGTreeNode* GetNextNode(CSGTreeNode* curNode, Relation rel, Relation &output)
+	{
+		assert(curNode->Type == TYPE_LEAF);
+		CSGTreeNode *parent = curNode->Parent;
+
+		switch (rel)
+		{
+		case REL_INSIDE:
+            return ParsingInside(curNode, output);
+		case REL_OUTSIDE:
+			return ParsingOutside(curNode, output);
+		case REL_SAME:
+			return ParsingSame(curNode, output);
+		case REL_OPPOSITE:
+			return ParsingOppo(curNode, output);
+		default: break;
+		}
+        assert(0);
+	}
 
 }  // namespace CSG
 

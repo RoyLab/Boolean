@@ -97,7 +97,7 @@ namespace CSG
 	void InsertSegment(ISectTriangle* tri, ISVertexItr v0, ISVertexItr v1, ISectTriangle* tri2);
 	void GetLocation(ISVertexInfo* info, Vec3d& vec);
 
-	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const CSGTree*, MPMesh**, GS::BaseMesh*);
+	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const TestTree*, MPMesh**, GS::BaseMesh*);
 	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, 
 		MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output);
 	bool CompareRelationSpace();

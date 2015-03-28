@@ -366,6 +366,7 @@ namespace CSG
 		CSGTree* curTree;
 		FacePair fPair;
 		ISectTriangle *curSurface;
+        TestTree testList;
 
 		for (unsigned i0 = 0; i0 < pOctree->nMesh; i0++)
 		{
@@ -421,7 +422,8 @@ namespace CSG
 					// 生成关系树
 					// TO-DO:通过检查可以减少这个树所需要的生成(ABC理论)
 					curTree = copy(pPosCSG);
-					curRelation = ParsingCSGTree(pMesh, curRelationTable, pOctree->nMesh, curTree); // 未检查
+                    testList.clear();
+					curRelation = ParsingCSGTree(pMesh, curRelationTable, pOctree->nMesh, curTree, testList); // 未检查testList
 					curSurface = pMesh->property(pMesh->SurfacePropHandle, curFace);
 
 					if (curSurface && (curSurface->segs.size() || curSurface->coplanarTris.size())) // 复合模式
@@ -446,10 +448,10 @@ namespace CSG
 							switch (curRelation)
 							{
 							case REL_NOT_AVAILABLE:
-								ParsingFace(pMesh, curFace, curTree, pOctree->pMesh, result);
+								ParsingFace(pMesh, curFace, &testList, pOctree->pMesh, result);
 								break;
 							case REL_SAME:
-								ParsingFace(pMesh, curFace, curTree, pOctree->pMesh, result);
+								ParsingFace(pMesh, curFace, &testList, pOctree->pMesh, result);
 								break;
 							case REL_INSIDE:
 								break;

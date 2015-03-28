@@ -20,11 +20,12 @@ namespace CSG
 		assert(!IsEqual(infos[seg.start->Id].p3, infos[seg.end->Id].p3));
 
 		auto dir = p1-p0;
-		double d = dir.x()*p0.y()-dir.y()*p0.x();
-		seg.lineCoef[0] = -dir.y();
-		seg.lineCoef[1] = dir.x();
+        OpenMesh::Vec2d n(-dir.y(), dir.x());
+        n.normalize();
+		double d = n[1]*p0.y()+n[0]*p0.x();
+		seg.lineCoef[0] = n[0];
+		seg.lineCoef[1] = n[1];
 		seg.lineCoef[2] = -d;
-		seg.lineCoef.normalize();
 	}
 
 	void SplitSegments(BSPSeg& splitSeg, std::vector<BSPSeg>::iterator cur,  std::vector<BSPSeg>::iterator end, 
@@ -38,7 +39,7 @@ namespace CSG
 		{
 			CALC_DISTANCE(ds, splitCoef, cur->start);
 			CALC_DISTANCE(de, splitCoef, cur->end);
-			if (ds*de < 0.0)
+			if (ds*de < 0.0 && fabs(ds) > EPSF && fabs(de) > EPSF)
 			{
 				nx = cur->start.x()*de/(de-ds)+cur->end.x()*ds/(ds-de);
 				ny = cur->start.y()*de/(de-ds)+cur->end.y()*ds/(ds-de);
@@ -70,12 +71,12 @@ namespace CSG
 			}
 			else
 			{
-				if (ds > 0)	left.push_back(*cur);
-				else if (ds < 0) right.push_back(*cur);
+				if (ds > EPSF)	left.push_back(*cur);
+				else if (ds < -EPSF) right.push_back(*cur);
 				else
 				{
-					if (de > 0)	left.push_back(*cur);
-					else if (de < 0) right.push_back(*cur);
+					if (de > EPSF)	left.push_back(*cur);
+					else if (de < -EPSF) right.push_back(*cur);
 				}
 			}
 		}

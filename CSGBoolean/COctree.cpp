@@ -388,8 +388,10 @@ namespace CSG
     
     Relation PolyhedralInclusionTest(Vec3d& point, Octree* pOctree, unsigned meshId, bool IsInverse)
     {
-        if (!pOctree->pMesh[meshId]->BBox.IsInBox(point))
+        if (!IsInverse && !pOctree->pMesh[meshId]->BBox.IsInBox(point))
             return REL_OUTSIDE;
+        else if (IsInverse && !pOctree->pMesh[meshId]->BBox.IsInBox(point))
+            return REL_INSIDE;
 
         AABBmp &bbox = pOctree->Root->BoundingBox;
 

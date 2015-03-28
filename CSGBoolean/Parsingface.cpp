@@ -8,6 +8,8 @@
 
 namespace CSG
 {
+    extern unsigned long long mark;
+
 	using namespace GEOM_FADE2D;
 	typedef std::list<ISCutSeg>::iterator ISCutSegItr;
 	int FindMaxIndex(Vec3d& vec);
@@ -53,16 +55,14 @@ namespace CSG
 		else return false;
 	}
 
-	void ParsingFace(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, const CSGTree* pTree, MPMesh** meshList, GS::BaseMesh* pResult)
+	void ParsingFace(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, const TestTree* pTree, MPMesh** meshList, GS::BaseMesh* pResult)
 	{
 		// 树不为空，存在一个on的节点
 		ISectTriangle* triangle = pMesh->property(pMesh->SurfacePropHandle, faceHandle);
 		assert(triangle);
-		for (auto &pair: pTree->Leaves)
-		{
-			if (pair.first == pMesh->ID) continue;
-			triangle->relationTestId.push_back(pair.first);
-		}
+        triangle->relationTestId.clear();
+		for (auto &itr: *pTree)
+            GetLeafList(itr.testTree, triangle->relationTestId);
 
 		// 取得有效的相交网格列表
 		std::sort(triangle->relationTestId.begin(), triangle->relationTestId.end());
@@ -178,8 +178,8 @@ namespace CSG
 			}
 		}
 	
-		Fade_2D* dt = triangle->dtZone;
-		dt = new Fade_2D;
+		Fade_2D*& dt = triangle->dtZone;
+        dt = new Fade_2D;
 		dt->insert(points[triangle->corner[0]->Id].p2);
 		dt->insert(points[triangle->corner[1]->Id].p2);
 		dt->insert(points[triangle->corner[2]->Id].p2);
@@ -191,100 +191,64 @@ namespace CSG
 		dt->getTrianglePointers(vAllTriangles);
 
 		Point2 baryCenter2d;
-		CSGTree* tmpTree;
-		if (!triangle->coplanarTris.size())
+		CSGTreeNode* curNode;
+        Relation curRelation(REL_UNKNOWN), outRelation(REL_UNKNOWN);
+        bool pass;
+		for (auto triFrag: vAllTriangles)
 		{
-			for (auto triFrag: vAllTriangles)
+			baryCenter2d = triFrag->getBarycenter();
+			GS::double3 v[3];
+			v[0] = Vec3dToDouble3(points[triFrag->getCorner(0)->getCustomIndex()].p3);
+			v[1] = Vec3dToDouble3(points[triFrag->getCorner(1)->getCustomIndex()].p3);
+			v[2] = Vec3dToDouble3(points[triFrag->getCorner(2)->getCustomIndex()].p3);
+
+			// 去除那些过小的三角形
+			GS::double3x3 mat(GS::double3(1,1,1), v[2]-v[1], v[2]-v[0]);
+			if (fabs(GS::determinant(mat)) < EPSF) continue;
+
+            pass = true;
+			for (auto &test: *pTree)
 			{
-				baryCenter2d = triFrag->getBarycenter();
-				tmpTree = copy(pTree);
-				GS::double3 v[3];
-				v[0] = Vec3dToDouble3(points[triFrag->getCorner(0)->getCustomIndex()].p3);
-				v[1] = Vec3dToDouble3(points[triFrag->getCorner(1)->getCustomIndex()].p3);
-				v[2] = Vec3dToDouble3(points[triFrag->getCorner(2)->getCustomIndex()].p3);
-
-				// 去除那些过小的三角形
-				GS::double3x3 mat(GS::double3(1,1,1), v[2]-v[1], v[2]-v[0]);
-				if (fabs(GS::determinant(mat)) < EPSF) continue;
-
-				for (auto testId: triangle->relationTestId)
-				{
-					if (tmpTree->Leaves.find(testId) != tmpTree->Leaves.end())
-					{
-						CompressCSGTree(tmpTree, testId, BSP2DInOutTest(triangle->segs[testId].bsp, &baryCenter2d));
-						if (tmpTree->Leaves.size() <= 1)
+                curNode = GetFirstNode(test.testTree);
+                while (curNode)
+                {
+                    curRelation = REL_UNKNOWN;
+                    auto cop = triangle->coplanarTris.find(testId);
+                    if (cop != triangle->coplanarTris.end())
+                    {
+						for (auto &coTri: cop->second)
 						{
-							if (tmpTree->Leaves.find(pMesh->ID) != tmpTree->Leaves.end())
-							{
+							if (IsInsideTriangle(triangle, meshList[testId], coTri, baryCenter2d, curRelation))
+								break;
+						}
+                    }
+                    if (curRelation == REL_UNKNOWN)
+                        curRelation = BSP2DInOutTest(triangle->segs[testId].bsp, &baryCenter2d);
+                    curNode = GetNextNode(curNode, curRelation, outRelation);
+                }
+                if (!(test.targetRelation & outRelation))
+                {
+                    pass = false;
+                    break;
+                }
+            }
+            mark += 2;
+
+            if (pass)
+            {
 #ifdef _DEBUG
-								countd2 ++;
+				countd2 ++;
 #endif
-								if (pMesh->bInverse)
-								{
-									auto tmp = v[0];
-									v[0] = v[2];
-									v[2] = tmp;
-								}
+				//if (pMesh->bInverse)
+				//{
+				//	auto tmp = v[0];
+				//	v[0] = v[2];
+				//	v[2] = tmp;
+				//}
 
-								pResult->AddTriangle(v);
-							}
-							break;
-						}
-					}
-				}
-				delete tmpTree;
-			}
-		}
-		else
-		{
-			for (auto triFrag: vAllTriangles)
-			{
-				baryCenter2d = triFrag->getBarycenter();
-				tmpTree = copy(pTree);
-				GS::double3 v[3];
-				v[0] = Vec3dToDouble3(points[triFrag->getCorner(0)->getCustomIndex()].p3);
-				v[1] = Vec3dToDouble3(points[triFrag->getCorner(1)->getCustomIndex()].p3);
-				v[2] = Vec3dToDouble3(points[triFrag->getCorner(2)->getCustomIndex()].p3);
-
-				// 去除那些过小的三角形
-				GS::double3x3 mat(GS::double3(1,1,1), v[2]-v[1], v[2]-v[0]);
-				if (fabs(GS::determinant(mat)) < EPSF) continue;
-
-				for (auto testId: triangle->relationTestId)
-				{
-					if (tmpTree->Leaves.find(testId) != tmpTree->Leaves.end())
-					{
-						Relation rel = REL_UNKNOWN;
-						auto cop = triangle->coplanarTris.find(testId);
-						if (cop != triangle->coplanarTris.end())
-						{
-							for (auto &coTri: cop->second)
-							{
-								if (IsInsideTriangle(triangle, meshList[testId], coTri, baryCenter2d, rel))
-									break;
-							}
-						}
-
-						if (rel == REL_UNKNOWN)
-							rel = BSP2DInOutTest(triangle->segs[testId].bsp, &baryCenter2d);
-
-						rel = CompressCSGTree(tmpTree, testId, rel);
-						if (tmpTree->Leaves.size() <= 1)
-						{
-							if (tmpTree->Leaves.find(pMesh->ID) != tmpTree->Leaves.end())
-							{
-#ifdef _DEBUG
-								countd2 ++;
-#endif
-								pResult->AddTriangle(v);
-							}
-							break;
-						}
-					}
-				}
-				delete tmpTree;
-			}
-		}
+				pResult->AddTriangle(v);
+            }
+        }
 	}
 
 	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, MPMesh::FaceHandle seedFace, 

@@ -1,6 +1,7 @@
 #pragma once
 #include "COctree.h"
 #include <map>
+#include <list>
 
 namespace GS
 {
@@ -27,6 +28,7 @@ namespace CSG
         BiNodeType Type;
 		Relation relation;
         CSGTreeNode *pLeft, *pRight, *Parent;
+		unsigned long long mark;
 
         MPMesh* pMesh;
 		bool	 bInverse;
@@ -44,11 +46,22 @@ namespace CSG
 		~CSGTree();
     };
 
+	struct Branch
+	{
+		int targetRelation;
+		CSGTreeNode* testTree;
+
+        ~Branch() {SAFE_RELEASE(testTree);}
+	};
+
+	typedef std::list<Branch> TestTree;
+    void GetLeafList(CSGTreeNode* root, std::vector<int>& list);
     CSGTree* ConvertCSGTree(GS::CSGExprNode* root, MPMesh*** arrMesh, int *nMes); // convert nodes.
 	CSGTree* ConvertToPositiveTree(const CSGTree* tree);
 	Relation CompressCSGTree(CSGTree* tree, unsigned Id, Relation rel);
-	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree*& curTree);
-
+	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree*& curTree, TestTree& output);
+    CSGTreeNode* GetNextNode(CSGTreeNode* curNode, Relation rel, Relation &output);
+    CSGTreeNode* GetFirstNode(CSGTreeNode* root);
     inline bool IsLeaf(CSGTreeNode* node) {return !(node->pLeft && node->pRight);}
     CSGTree* copy(const CSGTree* thiz);
 
