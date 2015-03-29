@@ -479,7 +479,7 @@ namespace CSG
                                 points.clear();
                                 ParsingFace1(pMesh, curFace, pOctree->pMesh, points);
                             }
-							ParsingFace(pMesh, curFace, &testList, curRelation, pOctree->pMesh, points, result);
+							ParsingFace(pMesh, curFace, &testList, curRelation, pOctree->pMesh, points, pOctree, result);
 							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
 						}
 					}

@@ -98,7 +98,7 @@ namespace CSG
     }
 
 	void ParsingFace(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, const TestTree* pTree,
-        Relation testRelation, MPMesh** meshList, std::vector<TMP_VInfo>& points, GS::BaseMesh* pResult)
+        Relation testRelation, MPMesh** meshList, std::vector<TMP_VInfo>& points, Octree* pOctree, GS::BaseMesh* pResult)
 	{
         if (testRelation == REL_INSIDE) return;
 
@@ -118,10 +118,15 @@ namespace CSG
 		Vec3d crossPoint;
 		for (unsigned i = 0; i < n_test; i++)
 		{
+			auto &res1 = triangle->segs.find(triangle->relationTestId[i]);
+            if (res1 == triangle->segs.end()) continue;
+            auto &segs1 = res1->second;
+
 			for (unsigned j = i+1; j < n_test; j++)
 			{
-				auto &segs1 = triangle->segs[triangle->relationTestId[i]];
-				auto &segs2 = triangle->segs[triangle->relationTestId[j]];
+				auto &res2 = triangle->segs.find(triangle->relationTestId[j]);
+                if (res2 == triangle->segs.end()) continue;
+                auto &segs2 = res2->second;
 
 				for (auto segItr1 = segs1.segs.begin(); segItr1 != segs1.segs.end(); segItr1++)
 				{
@@ -180,7 +185,9 @@ namespace CSG
 		for (unsigned i = 0; i < n_test; i++)
 		{
 			testId = triangle->relationTestId[i];
-			auto& segs = triangle->segs[testId];
+			auto& res1 = triangle->segs.find(testId);
+            if (res1 == triangle->segs.end()) continue;
+			auto& segs = res1->second;
 			for (auto seg = segs.segs.begin(); seg != segs.segs.end(); seg++)
 			{
 				p0 = &points[seg->start->Id].p2;
@@ -236,7 +243,15 @@ namespace CSG
 						}
                     }
                     if (curRelation == REL_UNKNOWN)
-                        curRelation = BSP2DInOutTest(triangle->segs[testId].bsp, &baryCenter2d);
+                    {
+                        if (triangle->segs.find(testId) != triangle->segs.end())
+                            curRelation = BSP2DInOutTest(triangle->segs[testId].bsp, &baryCenter2d);
+                        else
+                        {
+                            Vec3d bc((Double3ToVec3d(v[0])+Double3ToVec3d(v[1])+Double3ToVec3d(v[2]))/3.0);
+                            curRelation = PolyhedralInclusionTest(bc, pOctree, testId, pOctree->pMesh[testId]->bInverse);
+                        }
+                    }
                     curNode = GetNextNode(curNode, curRelation, outRelation);
                 }
                 if (!(test.targetRelation & outRelation))
@@ -274,7 +289,21 @@ namespace CSG
 			assert(triCur);
 			MarkNARelation(triCur, output);
 		}
-		else
+		//else if (!triCur || (!triCur->coplanarTris.size() && !triCur->segs.size()))
+  //      {
+  //          Vec3d *g[3];
+  //          GetCorners(pMesh, curFace, g[0], g[1], g[2]);
+  //          auto bc = (*g[0]+*g[1]+*g[2])/3.0;
+		//	for (auto& pair: triSeed->segs)
+		//		output[pair.first] = PolyhedralInclusionTest(bc, pOctree, pair.first, pOctree->pMesh[pair.first]->bInverse);
+
+  //          for (auto& pair2: triSeed->coplanarTris)
+  //          {
+  //              if (output[pair2.first] == REL_NOT_AVAILABLE)
+  //                  output[pair2.first] = PolyhedralInclusionTest(bc, pOctree, pair2.first, pOctree->pMesh[pair2.first]->bInverse);;
+  //          }
+  //      }
+        else
 		{
 			int index = TestNeighborIndex(pMesh, seedFace, curFace);
 			assert(index != -1);
@@ -299,8 +328,7 @@ namespace CSG
 			testPoint.set(p[a].x()+p[b].x()-p[index].x(), p[a].y()+p[b].y()-p[index].y());
 
 			for (auto& pair: triSeed->segs)
-				//if (output[pair.first] != REL_UNKNOWN)
-					output[pair.first] = BSP2DInOutTest(pair.second.bsp, &testPoint);
+				output[pair.first] = BSP2DInOutTest(pair.second.bsp, &testPoint);
 
             for (auto& pair2: triSeed->coplanarTris)
             {
