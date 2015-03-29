@@ -12,7 +12,11 @@ void GetLoop(std::string& s)
 {
     bool flag = false;
     char c[20];
-    const int end = 200;
+    int end;
+    std::ifstream script("D:\\boolnum.txt");
+    if (!script) std::cout << '\a';
+    script >> end;
+    script.close();
     for (int i = 0 ; i < end; i++)
     {
          
