@@ -109,6 +109,8 @@ namespace CSG
 					meshi = pOctree->pMesh[itr->first];
 					meshj = pOctree->pMesh[itr2->first];
 
+                    //if (meshi->ID != 100 && meshj->ID != 100) continue;
+
 					if (meshi->ID > meshj->ID) {meshId[0] = meshj->ID; meshId[1] = meshi->ID;}
 					else {meshId[0] = meshi->ID; meshId[1] = meshj->ID;}
 
@@ -363,7 +365,8 @@ namespace CSG
 		MPMesh::FaceFaceIter ffItr;
 		Vec3d *v0, *v1, *v2;
 		Relation *curRelationTable, curRelation;
-		CSGTree* curTree;
+		CSGTreeNode* curTree;
+        CSGTreeNode** curTreeLeaves = new CSGTreeNode*[pOctree->nMesh];
 		FacePair fPair;
 		ISectTriangle *curSurface;
         TestTree testList;
@@ -414,7 +417,7 @@ namespace CSG
 					relatedFace = seeds.queue.front()[0];
 					faceQueue.push(curFace);
 					seeds.queue.pop();
-					GetRelationTable(pMesh, curFace, relatedFace, seeds.relation, pOctree->nMesh, curRelationTable);
+					GetRelationTable(pMesh, curFace, relatedFace, seeds.relation, pOctree->nMesh, pOctree, curRelationTable);
 
 					// 初始化该种子对应的种子堆
 					seedQueueList.emplace();
@@ -422,9 +425,9 @@ namespace CSG
 
 					// 生成关系树
 					// TO-DO:通过检查可以减少这个树所需要的生成(ABC理论)
-					curTree = copy(pPosCSG);
+                    curTree = copy2(pPosCSG->pRoot, curTreeLeaves);
                     testList.clear();
-					curRelation = ParsingCSGTree(pMesh, curRelationTable, pOctree->nMesh, curTree, testList); // 未检查testList
+					curRelation = ParsingCSGTree(pMesh, curRelationTable, pOctree->nMesh, curTree, curTreeLeaves, testList); // 未检查testList
                     assert(!testList.size() || !testList.begin()->testTree->Parent);
 					curSurface = pMesh->property(pMesh->SurfacePropHandle, curFace);
 
@@ -446,12 +449,9 @@ namespace CSG
 #endif
 							auto seedSurface = pMesh->property(pMesh->SurfacePropHandle, curFace);
 							faceQueue.pop();
-                            points.clear();
-                            ParsingFace1(pMesh, curFace, pOctree->pMesh, points);
-							ParsingFace(pMesh, curFace, &testList, curRelation, pOctree->pMesh, points, result);
-							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
 
-							// add neighbor
+                            	// add neighbor
+                            bool IsSeed = false;
 							ffItr = pMesh->ff_iter(curFace);
 							int *markPtr;
 							for (int i = 0; i < 3; i++, ffItr++)
@@ -468,10 +468,19 @@ namespace CSG
 										fh[0] = curFace;
 										fh[1] = *ffItr;
 										seedQueueList.back().queue.push(fh);
+                                        IsSeed = true;
 									}
 									*markPtr = 1; // queued
 								}
 							}
+
+                            if (curRelation != REL_INSIDE || IsSeed)
+                            {
+                                points.clear();
+                                ParsingFace1(pMesh, curFace, pOctree->pMesh, points);
+                            }
+							ParsingFace(pMesh, curFace, &testList, curRelation, pOctree->pMesh, points, result);
+							pMesh->property(pMesh->MarkPropHandle, curFace) = 2; // processed
 						}
 					}
 					else  // 简单模式
@@ -523,6 +532,8 @@ namespace CSG
 				seedQueueList.pop();
 			}
 		}
+
+        delete [] curTreeLeaves;
 	}
 }
 

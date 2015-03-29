@@ -130,8 +130,8 @@ namespace CSG
 
 		ps2 = &(infos[seg2.start->Id].p2);
 		pe2 = &(infos[seg2.end->Id].p2);
-		CALC_DISTANCE(ds2, seg2.lineCoef, *ps2);
-		CALC_DISTANCE(de2, seg2.lineCoef, *pe2);
+		CALC_DISTANCE(ds2, seg1.lineCoef, *ps2);
+		CALC_DISTANCE(de2, seg1.lineCoef, *pe2);
 		if (ds2*de2 >= 0.0) return false;
 
 		output = infos[seg1.start->Id].p3*de1/(de1-ds1)+infos[seg1.end->Id].p3*ds1/(ds1-de1);

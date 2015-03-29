@@ -105,6 +105,7 @@ namespace CSG
 
                 BuildOctree(root->Child+i, pOctree, level+1);
             }
+            root->TriangleTable.clear(); // can it?
         }
     }
 
@@ -414,8 +415,8 @@ namespace CSG
 		{
 			switch (rayInfo.nCross)
 			{
-			case -1:    return REL_OPPOSITE;
-			case -2:    return REL_SAME;
+			case -1:    assert(0); return REL_OPPOSITE;
+			case -2:    assert(0); return REL_SAME;
 			case 1:     return REL_OUTSIDE;
 			default:    return REL_INSIDE;
 			}

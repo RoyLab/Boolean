@@ -12,6 +12,7 @@ namespace CSG
 	struct ISectTriangle;
 	struct ISVertexInfo;
 	struct BSP2D;
+    struct Octree;
 
 	typedef Vec3d Line2D;
 	typedef std::list<ISectTriangle>::iterator	ISectTriItr;
@@ -100,7 +101,7 @@ namespace CSG
 	void ParsingFace1(MPMesh* pMesh, MPMesh::FaceHandle faceHandle, MPMesh** meshList, std::vector<TMP_VInfo>& points);
 	void ParsingFace(MPMesh*, MPMesh::FaceHandle, const TestTree*, Relation, MPMesh**, std::vector<TMP_VInfo>& points, GS::BaseMesh*);
 	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, 
-		MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Relation*& output);
+		MPMesh::FaceHandle seedFace, Relation* relationSeed, unsigned nMesh, Octree* pOctree, Relation*& output);
 	bool CompareRelationSpace();
 
 	inline void MarkNARelation(ISectTriangle* tri, Relation* relation, Relation mark = REL_NOT_AVAILABLE)

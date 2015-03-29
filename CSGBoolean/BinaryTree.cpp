@@ -215,6 +215,23 @@ namespace CSG
 		return pCopy;
 	}
 
+    CSGTreeNode* copy2(const CSGTreeNode* thiz, CSGTreeNode** leafList)
+	{
+		if (!thiz) return nullptr;
+
+		CSGTreeNode* pRes = new CSGTreeNode(*thiz);
+
+        if (thiz->pMesh) leafList[thiz->pMesh->ID] = pRes;
+
+        pRes->pLeft = copy2(thiz->pLeft, leafList);
+		pRes->pRight = copy2(thiz->pRight, leafList);
+
+        if (pRes->pLeft) pRes->pLeft->Parent = pRes;
+		if (pRes->pRight) pRes->pRight->Parent = pRes;
+
+		return pRes;
+	}
+
 	static Relation CompressCSGTreeWithInside(CSGTree* tree, unsigned Id)
 	{
 		auto leaf = tree->Leaves[Id];
@@ -606,14 +623,12 @@ namespace CSG
 		return res;
 	}
 
-	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree*& curTree, TestTree& output)
+	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTreeNode* curTree, CSGTreeNode** leaves, TestTree& output)
 	{
-		for (auto& pair: curTree->Leaves)
-			pair.second->relation = tab[pair.first];
+		for (unsigned i = 0; i < nMesh; i++)
+			leaves[i]->relation = tab[i];
 
-		auto res =  curTree->Leaves.find(pMesh->ID);
-		if (res == curTree->Leaves.end()) assert(0);
-		CSGTreeNode *seed = res->second, *comp;
+		CSGTreeNode *seed = leaves[pMesh->ID], *comp;
 		int checkRel;
 		bool pass = true;
 		bool simple = true;
@@ -664,11 +679,13 @@ namespace CSG
 		}
 
         SAFE_RELEASE(curTree);
-		if (!simple) return REL_NOT_AVAILABLE;
-
+		if (pass) 
+        {
+            if (!simple) return REL_NOT_AVAILABLE;
+            else return REL_SAME;
+        }
         output.clear();
-		if (pass) return REL_SAME;
-		else return REL_INSIDE; //也有可能是OutSide
+	    return REL_INSIDE; //也有可能是OutSide
 	}
 
 	CSGTreeNode* GetFirstNode(CSGTreeNode* root)

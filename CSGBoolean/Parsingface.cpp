@@ -3,6 +3,7 @@
 #include "BinaryTree.h"
 #include "BSP2D.h"
 #include "BaseMesh.h"
+#include "COctree.h"
 #include "isect.h"
 #include <algorithm>
 
@@ -133,6 +134,7 @@ namespace CSG
 							points.emplace_back();
 							points.back().p3 = crossPoint;
 							points.back().p2 = Point2(crossPoint[triangle->xi], crossPoint[triangle->yi]);
+                            points.back().p2.setCustomIndex(vItr->Id);
 							points.back().ptr = vItr;
 							crossRecord[segItr2].push_back(vItr);
 							crossRecord[segItr1].push_back(vItr);
@@ -147,7 +149,7 @@ namespace CSG
 		ISCutSeg tmpSeg;
 		for (auto& pair: crossRecord)
 		{
-			SortSegPoint(pair, points);
+            if (pair.second.size() > 1) SortSegPoint(pair, points);
 			tmpSeg.start = pair.first->start;
 			tmpSeg.end = *pair.second.begin();
 			tmpSegList.push_back(tmpSeg);
@@ -161,8 +163,7 @@ namespace CSG
 				tmpSegList.push_back(tmpSeg);
 			}
 
-			tmpSeg.start = *pair.second.end();
-			tmpSeg.start--;
+			tmpSeg.start = *(--pair.second.end());
 			tmpSeg.end = pair.first->end;
 			tmpSegList.push_back(tmpSeg);
 
@@ -254,10 +255,11 @@ namespace CSG
 				pResult->AddTriangle(v);
             }
         }
+        SAFE_RELEASE(dt);
 	}
 
 	void GetRelationTable(MPMesh* pMesh, MPMesh::FaceHandle curFace, MPMesh::FaceHandle seedFace, 
-		Relation* relationSeed, unsigned nMesh, Relation*& output)
+		Relation* relationSeed, unsigned nMesh, Octree* pOctree, Relation*& output)
 	{
 		// 讨论相邻的两个三角形，如何从一个三角形导出另一个三角形的关系表的问题
 		output = new Relation[nMesh];
@@ -297,10 +299,32 @@ namespace CSG
 			testPoint.set(p[a].x()+p[b].x()-p[index].x(), p[a].y()+p[b].y()-p[index].y());
 
 			for (auto& pair: triSeed->segs)
-				if (output[pair.first] != REL_UNKNOWN)
+				//if (output[pair.first] != REL_UNKNOWN)
 					output[pair.first] = BSP2DInOutTest(pair.second.bsp, &testPoint);
 
+            for (auto& pair2: triSeed->coplanarTris)
+            {
+                if (output[pair2.first] == REL_NOT_AVAILABLE)
+                    output[pair2.first] = REL_UNKNOWN;
+            }
+
 			if (triCur) MarkNARelation(triCur, output);
+
+            std::vector<unsigned> errorList;
+            for (auto& pair2: triSeed->coplanarTris)
+            {
+                if (output[pair2.first] == REL_UNKNOWN)
+                    errorList.push_back(pair2.first);
+            }
+
+            if (errorList.size())
+            {
+                Vec3d *g[3];
+                GetCorners(pMesh, curFace, g[0], g[1], g[2]);
+                auto bc = (*g[0]+*g[1]+*g[2])/3.0;
+                for (auto index: errorList)
+                    output[index] = PolyhedralInclusionTest(bc, pOctree, index, pOctree->pMesh[index]->bInverse);
+            }
 		}
 	}
 
@@ -327,6 +351,7 @@ namespace CSG
 		// 确定排序方法
 		auto dir = infos[pair.first->end->Id].p3 - infos[pair.first->start->Id].p3;
 		int maxIndex = FindMaxIndex(dir);
+        assert(dir[maxIndex] != 0.0);
 		if (dir[maxIndex] > 0.0)
 		{
 			// from small to big
@@ -349,7 +374,22 @@ namespace CSG
 		}
 		else
 		{
-			assert(0);
+			for (auto itri = pair.second.begin(); itri != pair.second.end(); itri++)
+			{
+				for (auto itrj = itri;; itrj++)
+				{
+					auto itrnext = itrj; itrnext++;
+					if (itrnext == pair.second.end()) break;
+
+					if (infos[(*itrj)->Id].p3[maxIndex] < infos[(*itrnext)->Id].p3[maxIndex])
+					{
+						auto tmp = *itrj;
+						*itrj = *itrnext;
+						*itrnext = tmp;
+					}
+
+				}
+			}
 		}
 
 	}

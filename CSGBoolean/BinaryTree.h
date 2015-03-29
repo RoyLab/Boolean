@@ -59,11 +59,12 @@ namespace CSG
     CSGTree* ConvertCSGTree(GS::CSGExprNode* root, MPMesh*** arrMesh, int *nMes); // convert nodes.
 	CSGTree* ConvertToPositiveTree(const CSGTree* tree);
 	Relation CompressCSGTree(CSGTree* tree, unsigned Id, Relation rel);
-	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTree*& curTree, TestTree& output);
+	Relation ParsingCSGTree(MPMesh* pMesh, Relation* tab, unsigned nMesh, CSGTreeNode* curTree, CSGTreeNode** leaves, TestTree& output);
     CSGTreeNode* GetNextNode(CSGTreeNode* curNode, Relation rel, Relation &output);
     CSGTreeNode* GetFirstNode(CSGTreeNode* root);
     inline bool IsLeaf(CSGTreeNode* node) {return !(node->pLeft && node->pRight);}
     CSGTree* copy(const CSGTree* thiz);
+    CSGTreeNode* copy2(const CSGTreeNode* thiz, CSGTreeNode** leafList);
 
 	/** 
 	if it is a left child, return negative

@@ -8,20 +8,41 @@
 
 std::vector<std::string> expression;
 
+void GetLoop(std::string& s)
+{
+    bool flag = false;
+    char c[20];
+    const int end = 200;
+    for (int i = 0 ; i < end; i++)
+    {
+         
+        sprintf_s(c, 20, "%d", i);
+        s+=c;
+        if (i <end-1)
+            if (flag) s+="+";
+            else s+="-";
+        flag = !flag;
+    }
+}
+
+
 CGraphics::CGraphics()
 	:mViewPortSize(0, 0)
 	, mCursorPos(0, 0)
 {
 	m_pD3D =0;
-    std::ifstream script("D:\\boolconfig.txt");
-    if (!script) std::cout << '\a';
-    char eval[32];
-    while (!script.eof())
-    {
-        script.getline(eval, 32);
-        expression.emplace_back(eval);
-    }
-    script.close();
+    //std::ifstream script("D:\\boolconfig.txt");
+    //if (!script) std::cout << '\a';
+    //char eval[32];
+    //while (!script.eof())
+    //{
+    //    script.getline(eval, 32);
+    //    expression.emplace_back(eval);
+    //}
+    //script.close();
+
+    expression.emplace_back();
+    GetLoop(expression.back());
 }
 
 CGraphics::~CGraphics()
