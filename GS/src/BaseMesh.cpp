@@ -7,8 +7,8 @@
 #include "BaseMesh.h"
 #include "topology.h"
 #include "adaptive.h"
-#include "tbb\parallel_for.h"
-#include "tbb\tick_count.h"
+//#include "tbb\parallel_for.h"
+//#include "tbb\tick_count.h"
 
 
 namespace GS{

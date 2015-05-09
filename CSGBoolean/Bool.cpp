@@ -11,7 +11,8 @@
 #include <queue>
 #include "CSGExprNode.h"
 #include "configure.h"
-
+#include <random>
+#include <ctime>
 
 #ifdef _DEBUG
 #include <vld.h>
@@ -30,7 +31,7 @@ namespace CSG
 
     static void GetLeafNodes(OctreeNode* pNode, std::list<OctreeNode*>& leaves, int NodeType);
 
-	void StdOutput(char* str)
+	void StdOutput(const char* str)
 	{
 		std::string ch(str);
 		WriteConsole(_output, str, ch.size(), 0, 0);
@@ -214,6 +215,7 @@ namespace CSG
 
 	static GS::BaseMesh* BooleanOperation2(GS::CSGExprNode* input, HANDLE stdoutput)
 	{
+        srand(time(0));
 		_output= stdoutput;
         MPMesh** arrMesh = NULL;
 		result = new GS::BaseMesh;
@@ -372,10 +374,15 @@ namespace CSG
         TestTree testList;
         std::vector<TMP_VInfo> points;
 
+        std::string randnumberout;
+        char str[32];
 		for (unsigned i0 = 0; i0 < pOctree->nMesh; i0++)
 		{
 			pMesh = pOctree->pMesh[i0];
-			curFace = *pMesh->faces_begin();
+            int randid = rand()%pMesh->n_faces();
+            sprintf_s(str, "(%u, %d)", i0, randid);
+            randnumberout += str;
+			curFace = pMesh->face_handle(randid);
 
 			// 初始化第一个种子堆
 			seedQueueList.emplace();
@@ -532,7 +539,7 @@ namespace CSG
 				seedQueueList.pop();
 			}
 		}
-
+        StdOutput(randnumberout.c_str());
         delete [] curTreeLeaves;
 	}
 }

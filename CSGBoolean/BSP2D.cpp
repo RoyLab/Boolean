@@ -9,6 +9,8 @@ namespace CSG
 #define CALC_DISTANCE(d, splitCoef, point)\
 			(d) = (splitCoef)[0]*(point).x()+(splitCoef)[1]*(point).y()+(splitCoef)[2]
 
+	void StdOutput(const char* str);
+
 	// 通过向量的方向来划分空间
 	// 向量逆时针转90度为法向方向
 	// 法向表示朝里

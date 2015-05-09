@@ -1,7 +1,7 @@
 #include "precompile.h"
 #include "CMesh.h"
 #include "BaseMesh.h"
-#pragma comment(lib, "GS")
+//#pragma comment(lib, "GS")
 
 namespace CSG
 {

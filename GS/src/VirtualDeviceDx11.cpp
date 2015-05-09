@@ -231,7 +231,7 @@ bool VirtualDeviceDx11::Initialize(int screenWidth, int screenHeight, bool vsync
 	rasterDesc.DepthBias = 0;
 	rasterDesc.DepthBiasClamp = 0.0f;
 	rasterDesc.DepthClipEnable = true;
-	rasterDesc.FillMode = D3D11_FILL_WIREFRAME;
+	rasterDesc.FillMode = D3D11_FILL_SOLID;
 	rasterDesc.FrontCounterClockwise = false;
 	rasterDesc.MultisampleEnable = true;
 	rasterDesc.ScissorEnable = false;

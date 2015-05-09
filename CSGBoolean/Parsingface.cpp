@@ -223,7 +223,7 @@ namespace CSG
 
 			// 去除那些过小的三角形
 			GS::double3x3 mat(GS::double3(1,1,1), v[2]-v[1], v[2]-v[0]);
-			if (fabs(GS::determinant(mat)) < EPSF) continue;
+			//if (fabs(GS::determinant(mat)) < EPSF) continue;
 
             pass = true;
 			for (auto &test: *pTree)
